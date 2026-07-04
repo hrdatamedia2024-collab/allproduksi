@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PT ABC — Sistem Produksi v3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- Pindahkan library Supabase ke sini agar tidak merusak CSS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- <script src="assets/js/config/supabase.js"></script> -->
+
 <style>
 :root{--bg:#0f0f0e;--bg2:#1a1a18;--bg3:#242422;--bg4:#2e2e2b;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#f0ede8;--text2:#9e9b95;--text3:#5a5855;--accent:#e8c547;--accent2:#c4a330;--red:#e05c5c;--green:#6abf7b;--orange:#e8924a;--blue:#5b9bd5;--purple:#9b7fd4;--r:9px;--rl:13px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -431,6 +436,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
   </div>
   <div class="card"><div id="lap-body" style="max-height:480px;overflow-y:auto"></div></div>
 </div>
+
 <!-- HQ COMPANY -->
 <div id="page-hq-company" class="page">
   <div class="card" style="max-width:500px">
@@ -629,15 +635,71 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
   </div>
 </div></div>
 
+<!-- ========================================== -->
+<!-- SCRIPT UTAMA & SUPABASE CONFIGURATION      -->
+<!-- ========================================== -->
 <script>
 // ═══════════════════════════════════════════════════
-// GLOBAL DATA
+// SUPABASE INITIALIZATION
 // ═══════════════════════════════════════════════════
+/* 
+Ganti YOUR_SUPABASE_URL dan YOUR_SUPABASE_ANON_KEY dengan kredensial dari 
+Dashboard Supabase Anda (Project Settings -> API).
+*/
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+/*
+CONTOH IMPLEMENTASI SUPABASE:
+Untuk mengganti penyimpanan array lokal di variabel "DB", Anda perlu memodifikasi fungsi-fungsi submit
+seperti submitStokMasuk() menjadi fungsi async. 
+
+Contoh Kasus pada "submitStokMasuk":
+
+async function submitStokMasuk() {
+  const bid = SESSION.brandId;
+  const tgl = $('sm-tgl').value || today();
+  const cat = $('sm-cat').value;
+  const nama = $('sm-item').value;
+  const qty = parseFloat($('sm-qty').value) || 0;
+  const sup = $('sm-sup').value;
+  const note = $('sm-note').value;
+
+  if(qty <= 0) return alert('Jumlah harus lebih dari 0');
+
+  // GANTI KODE LOKAL:
+  // it.stok = R(it.stok+qty);
+  // DB.masukLog[bid].push({...});
+
+  // MENJADI KODE SUPABASE:
+  const { data, error } = await supabase
+    .from('stok_masuk_log') // Pastikan tabel ini sudah dibuat di Supabase
+    .insert([
+      { brand_id: bid, tanggal: tgl, kategori: cat, nama_item: nama, qty: qty, supplier: sup, catatan: note }
+    ]);
+
+  if (error) {
+    alert("Gagal menyimpan ke database!");
+    console.error(error);
+  } else {
+    alert(`✓ Stok masuk tersimpan di Supabase!`);
+    // Panggil ulang fungsi render Anda di sini
+  }
+}
+*/
+
+// ═══════════════════════════════════════════════════
+// GLOBAL DATA (DATA LOKAL)
+// ═══════════════════════════════════════════════════
+// CATATAN: Untuk menggunakan Supabase sepenuhnya, objek DB ini sebaiknya diisi
+// secara dinamis (di-fetch) dari Supabase pada saat halaman pertama kali dimuat.
 const CATS = ['Bahan Baku','Saus','Bumbu','Kemasan','Perlengkapan'];
-let DB = {company:{
-  name:'PT ABC',
-  logo:''
-},
+let DB = {
+  company:{
+    name:'PT ABC',
+    logo:''
+  },
   brands: {
     brandA:{name:'Brand A',color:'#e8c547',items:{'Bahan Baku':[{nama:'Macaroni Mateng',satuan:'kg',stok:15,min:5,paiManual:0},{nama:'Macaroni Mentah',satuan:'kg',stok:20,min:8,paiManual:0},{nama:'Mie Lidi',satuan:'kg',stok:8,min:5,paiManual:0},{nama:'Pilus',satuan:'kg',stok:3,min:4,paiManual:0},{nama:'Mie Kremes',satuan:'kg',stok:10,min:5,paiManual:0},{nama:'Basreng',satuan:'kg',stok:6,min:4,paiManual:0},{nama:'Minyak Goreng',satuan:'liter',stok:12,min:10,paiManual:0},{nama:'Tempe',satuan:'kg',stok:2,min:3,paiManual:0},{nama:'Usus',satuan:'kg',stok:5,min:3,paiManual:0},{nama:'Mie Gulung',satuan:'kg',stok:7,min:4,paiManual:0}],'Saus':[{nama:'Saus Keju',satuan:'kg',stok:3,min:2,paiManual:0},{nama:'Saus Pedas Lv 5',satuan:'kg',stok:2.5,min:2,paiManual:0},{nama:'Saus BBQ',satuan:'kg',stok:1.5,min:2,paiManual:0},{nama:'Saus Bolognese',satuan:'kg',stok:2,min:1.5,paiManual:0},{nama:'Chili Oil',satuan:'liter',stok:1,min:1,paiManual:0}],'Bumbu':[{nama:'Original Bumbu Tabur',satuan:'kg',stok:2,min:1,paiManual:0},{nama:'Bumbu Tabur Keju',satuan:'kg',stok:1.5,min:1,paiManual:0},{nama:'Bumbu Tabur Jagung Manis',satuan:'kg',stok:1.8,min:1,paiManual:0},{nama:'Bumbu Tabur Pedas Lv 5',satuan:'kg',stok:2,min:1,paiManual:0},{nama:'Bumbu Tabur Pedas Daun Jeruk',satuan:'kg',stok:0.5,min:1,paiManual:0},{nama:'Bumbu Tabur Rendang',satuan:'kg',stok:1,min:0.8,paiManual:0},{nama:'Ayam Bawang',satuan:'kg',stok:1,min:0.8,paiManual:0},{nama:'BBQ Balado',satuan:'kg',stok:0.6,min:0.8,paiManual:0},{nama:'Super Pedas Lv 15',satuan:'kg',stok:0.4,min:0.5,paiManual:0}],'Kemasan':[{nama:'Food Pail',satuan:'pcs',stok:200,min:100,paiManual:0},{nama:'Plastik Sablon Besar',satuan:'pack',stok:5,min:3,paiManual:0},{nama:'Plastik Saus 1/2 Kg',satuan:'pack',stok:8,min:5,paiManual:0},{nama:'Plastik Sablon Kecil',satuan:'pack',stok:4,min:3,paiManual:0}],'Perlengkapan':[{nama:'Timbangan Digital',satuan:'pcs',stok:2,min:1,paiManual:0},{nama:'Kardus Packing',satuan:'pcs',stok:50,min:30,paiManual:0},{nama:'Lakban Cokelat',satuan:'roll',stok:4,min:3,paiManual:0},{nama:'Kertas Label',satuan:'pack',stok:3,min:2,paiManual:0}]}},
     brandB:{name:'Brand B',color:'#6abf7b',items:{'Bahan Baku':[{nama:'Macaroni Mateng',satuan:'kg',stok:10,min:5,paiManual:0},{nama:'Tepung Bumbu',satuan:'kg',stok:8,min:4,paiManual:0},{nama:'Telur',satuan:'pcs',stok:120,min:60,paiManual:0}],'Saus':[{nama:'Saus Sambal',satuan:'kg',stok:2,min:1.5,paiManual:0}],'Bumbu':[{nama:'Bumbu Tabur Original',satuan:'kg',stok:1,min:0.8,paiManual:0}],'Kemasan':[{nama:'Box Kemasan B',satuan:'pcs',stok:100,min:50,paiManual:0}],'Perlengkapan':[{nama:'Kompor Portable',satuan:'pcs',stok:2,min:1,paiManual:0}]}},
@@ -660,6 +722,7 @@ let DB = {company:{
     {username:'picE',password:'picE123',nama:'PIC Brand E',role:'pic',brand:'brandE',active:true},
   ],
 };
+
 Object.keys(DB.brands).forEach(bid=>{
   DB.keluarLog[bid]=[];DB.masukLog[bid]=[];DB.wasteLog[bid]=[];DB.orderLog[bid]=[];
   DB.resep[bid]=[];DB.sdm[bid]=[];
@@ -721,6 +784,8 @@ setInterval(()=>{const n=new Date();$('clock').textContent=n.toLocaleDateString(
 // ═══════════════════════════════════════════════════
 function doLogin(){
   const u=$('l-user').value.trim(),p=$('l-pass').value;
+  // TODO: Implementasi Supabase Auth dapat diletakkan di sini
+  // contoh: await supabase.auth.signInWithPassword({ email: u, password: p });
   const user=DB.users.find(x=>x.username===u&&x.password===p&&x.active);
   if(!user){$('l-err').style.display='block';return;}
   $('l-err').style.display='none';
@@ -730,6 +795,8 @@ function doLogin(){
   initApp();
 }
 function doLogout(){
+  // TODO: Supabase logout
+  // await supabase.auth.signOut();
   SESSION={user:null,brandId:null};
   $('login-screen').style.display='flex';
   $('app-screen').style.display='none';
@@ -745,14 +812,15 @@ $('l-user').addEventListener('keydown',e=>{if(e.key==='Enter')$('l-pass').focus(
 function initApp(){
   const u=SESSION.user;
   $('sf-user').textContent=u.nama;
-$('comp-name-label').textContent = DB.company.name;
-if(DB.company.logo){
-  $('comp-logo-img').src = DB.company.logo;
-}
+  $('comp-name-label').textContent = DB.company.name;
+  if(DB.company.logo){
+    $('comp-logo-img').src = DB.company.logo;
+  }
   $('sf-role').textContent=u.role==='admin'?'Admin PT ABC':'PIC — '+DB.brands[u.brand]?.name;
   $('nav-admin').style.display=u.role==='admin'?'block':'none';
   $('nav-brand').style.display='block';
   refreshSidebar();
+  
   // init dates
   const t=today(),e14=addD(t,14),s7=addD(t,-7);
   ['sm-tgl','wa-tgl','oc-tgl','lap-tgl'].forEach(id=>{const el=$(id);if(el)el.value=t;});
@@ -766,8 +834,11 @@ if(DB.company.logo){
   populateBrandDropdowns();
   buildStokTabs();
   buildCatDropdowns();
-  if(u.role==='admin')goto('hq-dash');else goto('dashboard');
+  
+  if(u.role==='admin') goto('hq-dash');
+  else goto('dashboard');
 }
+
 function refreshSidebar(){
   const bid=SESSION.brandId;
   $('sb-brand').textContent=DB.brands[bid]?.name||'PT ABC';
@@ -779,29 +850,50 @@ function refreshSidebar(){
 // NAV
 // ═══════════════════════════════════════════════════
 const PAGE_TITLES={'dashboard':'Dashboard','stok-masuk':'Stok Masuk','stok':'Stok & Inventori','keluar':'Input Stok Keluar Harian','waste':'Waste Harian','order-list':'List Order & Rekomendasi','estimasi':'Estimasi Bertahan','resep':'Resep & Formula','transfer':'Transfer Stok','sdm':'SDM & KPI','laporan':'Laporan Harian','hq-dash':'Dashboard HQ','hq-brands':'Stok Semua Brand','hq-transfer':'Kelola Transfer','hq-sdm':'SDM Semua Brand','hq-users':'Kelola Akun','hq-brand-add':'Tambah Brand Baru'};
+
 function goto(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const pg=$('page-'+id);if(pg)pg.classList.add('active');
-function goto(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
+  
+  const pg=$('page-'+id);
+  if(pg) pg.classList.add('active');
 
-  // 🔥 TAMBAHAN
   if(id === 'hq-company'){
     loadCompanyPage();
   }
-}
-  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')===`goto('${id}')`)n.classList.add('active');});
+
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')===`goto('${id}')`) n.classList.add('active');
+  });
+
   $('page-title').textContent=PAGE_TITLES[id]||id;
-  const map={dashboard:renderDashboard,'stok-masuk':renderStokMasukPage,stok:renderStokPage,keluar:renderKeluar,waste:renderWastePage,['order-list']:renderOrderList,estimasi:renderEstimasi,resep:renderResep,transfer:renderTransfer,sdm:renderSDM,laporan:renderLaporan,'hq-dash':renderHQDash,'hq-brands':renderHQBrands,'hq-transfer':renderHQTransfer,'hq-sdm':renderHQSDM,'hq-users':renderUsers,'hq-brand-add':initBrandAdd};
-  if(map[id])map[id]();
+
+  const map = {
+    dashboard:renderDashboard, 'stok-masuk':renderStokMasukPage, stok:renderStokPage, 
+    keluar:renderKeluar, waste:renderWastePage, ['order-list']:renderOrderList, 
+    estimasi:renderEstimasi, resep:renderResep, transfer:renderTransfer, 
+    sdm:renderSDM, laporan:renderLaporan, 'hq-dash':renderHQDash, 
+    'hq-brands':renderHQBrands, 'hq-transfer':renderHQTransfer, 'hq-sdm':renderHQSDM, 
+    'hq-users':renderUsers, 'hq-brand-add':initBrandAdd
+  };
+  
+  if(map[id]) map[id]();
   updateNotifs();
 }
-function switchTab(el,g,tid){const pg=$('page-'+g);if(!pg)return;pg.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));pg.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));el.classList.add('active');const tc=$(tid);if(tc)tc.classList.add('active');}
+
+function switchTab(el,g,tid){
+  const pg=$('page-'+g);if(!pg)return;
+  pg.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  pg.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const tc=$(tid);if(tc)tc.classList.add('active');
+}
+
 function openModal(id){$(id).classList.add('open');}
 function closeModal(id){$(id).classList.remove('open');}
-document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{
+  if(e.target===m)m.classList.remove('open');
+}));
 
 function updateNotifs(){
   const bid=SESSION.brandId;
@@ -854,15 +946,34 @@ function renderDashboard(){
   const bid=SESSION.brandId,t=today();
   const all=allFlat(bid);
   let k=0,r=0;const alerts=[];
-  all.forEach(it=>{const[s,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger'){k++;alerts.push(it);}else if(c==='b-warn'){r++;alerts.push(it);}});
-  $('db-kritis').textContent=k;$('db-reorder').textContent=r;$('db-total').textContent=all.length;
+  all.forEach(it=>{
+    const[s,c]=statusItem(bid,it.cat,it.nama);
+    if(c==='b-danger'){k++;alerts.push(it);}
+    else if(c==='b-warn'){r++;alerts.push(it);}
+  });
+  
+  $('db-kritis').textContent=k;
+  $('db-reorder').textContent=r;
+  $('db-total').textContent=all.length;
   $('db-waste').textContent=(DB.wasteLog[bid]||[]).filter(w=>w.tgl===t).length;
   $('db-tr-pending').textContent=(DB.transferLog||[]).filter(tr=>tr.fromBrand===bid&&tr.status==='Pending').length;
+  
   const atbl=$('db-alert-tbl');
-  atbl.innerHTML=alerts.length?alerts.map(it=>{const avg=R(avgKeluar7(bid,it.cat,it.nama));const h=avg>0?R(it.stok/avg,1):null;const[s,c]=statusItem(bid,it.cat,it.nama);return`<tr><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono">${avg>0?avg+'/hr':'-'}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Semua stok aman</td></tr>';
+  atbl.innerHTML=alerts.length?alerts.map(it=>{
+    const avg=R(avgKeluar7(bid,it.cat,it.nama));
+    const h=avg>0?R(it.stok/avg,1):null;
+    const[s,c]=statusItem(bid,it.cat,it.nama);
+    return`<tr><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono">${avg>0?avg+'/hr':'-'}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">Semua stok aman</td></tr>';
+  
   // top 3 rekomendasi order
   const lead=14,buf=5,s7=addD(t,-7);
-  const recs=allFlat(bid).map(it=>{const avg=avgKeluar(bid,it.cat,it.nama,s7,t);const qty=avg>0?Math.ceil(avg*lead+avg*buf-it.stok):0;return{...it,avg,qty};}).filter(x=>x.qty>0).sort((a,b)=>b.qty-a.qty).slice(0,3);
+  const recs=allFlat(bid).map(it=>{
+    const avg=avgKeluar(bid,it.cat,it.nama,s7,t);
+    const qty=avg>0?Math.ceil(avg*lead+avg*buf-it.stok):0;
+    return{...it,avg,qty};
+  }).filter(x=>x.qty>0).sort((a,b)=>b.qty-a.qty).slice(0,3);
+  
   $('db-order-recs').innerHTML=recs.length?recs.map(it=>`<div class="order-rec-card"><div style="font-weight:600;font-size:13px;margin-bottom:2px">${it.nama}</div><div style="font-size:10px;color:var(--text3)">${it.cat} · avg keluar ${R(it.avg)}/hari</div><div class="order-rec-grid"><div class="orc"><div class="orc-val">${it.stok} <span style="font-size:9px">${it.satuan}</span></div><div class="orc-lbl">Stok</div></div><div class="orc"><div class="orc-val tag-a">${it.qty} <span style="font-size:9px">${it.satuan}</span></div><div class="orc-lbl">Perlu Order</div></div></div></div>`).join(''):'<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Tidak ada rekomendasi order</div>';
 }
 
@@ -892,6 +1003,10 @@ function submitStokMasuk(){
   const it=bItems(bid)[cat]?.find(i=>i.nama===nama);
   if(!it)return;
   it.stok=R(it.stok+qty);
+  
+  // TODO: Supabase implementation (contoh)
+  // supabase.from('stok_masuk_log').insert([...])
+  
   DB.masukLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama,qty,satuan:it.satuan,supplier:sup,catatan:note});
   $('sm-qty').value='';$('sm-sup').value='';$('sm-note').value='';
   renderMasukLog();renderDashboard();
@@ -926,13 +1041,19 @@ function openAddItem(cat){
   const stok=parseFloat(prompt('Stok awal:','0'))||0;
   const min=parseFloat(prompt('Min stok (reorder point):','0'))||0;
   const bid=SESSION.brandId;
+  
+  // TODO: Insert via Supabase
   bItems(bid)[cat].push({nama,satuan,stok,min,paiManual:0});
   renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));
 }
 function editMin(bid,cat,i){
   const it=bItems(bid)[cat][i];
   const v=prompt(`Min stok "${it.nama}" (${it.satuan}):`,it.min);
-  if(v!==null&&!isNaN(parseFloat(v))){it.min=parseFloat(v);renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));}
+  if(v!==null&&!isNaN(parseFloat(v))){
+    // TODO: Update via Supabase
+    it.min=parseFloat(v);
+    renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -960,6 +1081,7 @@ function submitKeluarBatch(){
     if(qty>0){
       if(qty>it.stok){alert(`Stok "${it.nama}" tidak cukup! Saat ini: ${it.stok} ${it.satuan}`);return;}
       it.stok=R(it.stok-qty);
+      // TODO: Supabase integration for stock update and log insert
       DB.keluarLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama:it.nama,qty,satuan:it.satuan,alasan});
       if(alasan==='Rusak/Waste')DB.wasteLog[bid].push({ts:new Date().toISOString(),tgl,jenis:'Produksi Gagal',item:it.nama,qty,satuan:it.satuan,sebab:'Dari stok keluar (rusak)'});
       count++;
@@ -983,20 +1105,25 @@ function renderWastePage(){
   const viewTgl=$('w-view-tgl').value||today();
   const all=DB.wasteLog[bid]||[];
   const todayW=all.filter(w=>w.tgl===viewTgl);
+  
   $('w-today').textContent=todayW.length;
   $('w-prod').textContent=all.filter(w=>w.jenis==='Produksi Gagal').length;
   $('w-exp').textContent=all.filter(w=>w.jenis==='Bahan Expired').length;
   $('w-kem').textContent=all.filter(w=>w.jenis==='Kemasan Rusak').length;
+  
   const dotC={'Produksi Gagal':'var(--orange)','Bahan Expired':'var(--red)','Kemasan Rusak':'var(--blue)'};
   const badC={'Produksi Gagal':'b-warn','Bahan Expired':'b-danger','Kemasan Rusak':'b-blue'};
   const body=$('waste-log-body');
   const show=[...all].reverse().slice(0,50);
+  
   body.innerHTML=show.length?show.map(w=>`<div class="waste-entry"><div class="waste-dot" style="background:${dotC[w.jenis]||'var(--text3)'}"></div><div style="flex:1"><div style="font-weight:500">${w.item} — <span class="mono tag-a">${w.qty} ${w.satuan}</span></div><div style="font-size:10px;color:var(--text3);margin-top:1px">${w.sebab}</div></div><div style="text-align:right;flex-shrink:0"><span class="badge ${badC[w.jenis]||'b-gray'}">${w.jenis}</span><div style="font-size:10px;color:var(--text3);margin-top:3px">${fmtD(w.tgl)}</div></div></div>`).join(''):'<div class="empty">Belum ada waste tercatat</div>';
 }
 function submitWaste(){
   const bid=SESSION.brandId;
   const jenis=$('wa-jenis').value,tgl=$('wa-tgl').value||today(),item=$('wa-item').value.trim(),qty=parseFloat($('wa-qty').value)||0,satuan=$('wa-sat').value,sebab=$('wa-sebab').value.trim();
   if(!item||qty<=0)return alert('Isi item dan jumlah waste');
+  
+  // TODO: Supabase integration for waste insert
   DB.wasteLog[bid].push({ts:new Date().toISOString(),tgl,jenis,item,qty,satuan,sebab});
   closeModal('modal-waste');renderWastePage();renderDashboard();
 }
@@ -1015,9 +1142,12 @@ function renderOrderList(){
   $('ol-lead-disp').textContent=lead+' hr';
   $('ol-buf-disp').textContent=buf+' hr';
 
-  // hitung rentang hari
   let rangeDays='—';
-  if(avgS&&avgE){const d1=new Date(avgS+'T00:00:00'),d2=new Date(avgE+'T00:00:00');const diff=Math.max(1,Math.round((d2-d1)/86400000)+1);rangeDays=diff+' hr';}
+  if(avgS&&avgE){
+    const d1=new Date(avgS+'T00:00:00'),d2=new Date(avgE+'T00:00:00');
+    const diff=Math.max(1,Math.round((d2-d1)/86400000)+1);
+    rangeDays=diff+' hr';
+  }
   $('ol-range-disp').textContent=rangeDays;
 
   let items=allFlat(bid);
@@ -1025,15 +1155,12 @@ function renderOrderList(){
 
   const rows=items.map(it=>{
     const avg=avgKeluar(bid,it.cat,it.nama,avgS||addD(today(),-7),avgE||today());
-    // Rumus: (avg × lead) + (avg × buf) - stok
     const qtyOrder=avg>0?Math.max(0,Math.ceil(avg*lead+avg*buf-it.stok)):0;
     const stokSetelah=it.stok+qtyOrder;
     const bertahanSetelah=avg>0?R(stokSetelah/avg,1):null;
     const[s,c]=statusItem(bid,it.cat,it.nama);
     const perluOrder=qtyOrder>0;
     if(showF==='need'&&!perluOrder)return null;
-    const rowCls=perluOrder?'':'';
-    const dasar=avg>0?`${R(avg)}/hr × (${lead}+${buf})`:'-';
     return{it,avg,qtyOrder,stokSetelah,bertahanSetelah,s,c,perluOrder};
   }).filter(Boolean);
 
@@ -1064,7 +1191,14 @@ function renderOrderLog(){
 function setOrderTiba(bid,i){
   const o=DB.orderLog[bid][i];o.status='Tiba';
   const found=allFlat(bid).find(it=>it.nama===o.item);
-  if(found){const it=bItems(bid)[found.cat]?.find(it=>it.nama===o.item);if(it){it.stok=R(it.stok+o.qty);DB.masukLog[bid].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:o.item,qty:o.qty,satuan:it.satuan,supplier:o.supplier||'',catatan:'Order tiba'});}}
+  if(found){
+    const it=bItems(bid)[found.cat]?.find(it=>it.nama===o.item);
+    if(it){
+      // TODO: Supabase integration for marking order arrived and stock insertion
+      it.stok=R(it.stok+o.qty);
+      DB.masukLog[bid].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:o.item,qty:o.qty,satuan:it.satuan,supplier:o.supplier||'',catatan:'Order tiba'});
+    }
+  }
   renderOrderList();renderDashboard();
 }
 function submitOrderCatat(){
@@ -1112,8 +1246,9 @@ function renderResep(){
   const bid=SESSION.brandId;
   const reseps=DB.resep[bid]||[];
   const container=$('resep-container');
-  if(!reseps.length){container.innerHTML='<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada resep. Tambah resep untuk mulai menghitung kebutuhan bahan.</div>';}
-  else{
+  if(!reseps.length){
+    container.innerHTML='<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada resep. Tambah resep untuk mulai menghitung kebutuhan bahan.</div>';
+  } else{
     container.innerHTML=reseps.map((r,i)=>`<div class="card" style="margin-bottom:.8rem"><div class="card-header"><div><div style="font-weight:600;font-size:13px">${r.nama}</div><div style="font-size:10px;color:var(--text3);margin-top:1px">Yield: ${r.porsi} ${r.satuanYield||'pcs'} per batch · ${r.catatan||''}</div></div><div class="flex-row" style="gap:5px"><button class="btn btn-sm" onclick="editResep(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="hapusResep(${i})">Hapus</button></div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bahan</th><th>Qty per ${r.porsi} ${r.satuanYield||'pcs'}</th><th>Satuan</th></tr></thead><tbody>${r.bahan.map(b=>`<tr><td>${b.nama}</td><td class="mono">${b.qty}</td><td>${b.satuan}</td></tr>`).join('')}</tbody></table></div></div>`).join('');
   }
   // kalkulator
@@ -1144,11 +1279,18 @@ function submitResep(){
   const nama=$('r-nama').value.trim(),porsi=parseFloat($('r-porsi').value)||1,satuanYield=$('r-satuan-yield').value.trim()||'pcs',catatan=$('r-catatan').value.trim();
   const bahanRaw=$('r-bahan').value.trim();
   if(!nama||!bahanRaw)return alert('Isi nama dan bahan resep');
-  const bahan=bahanRaw.split('\n').map(l=>{const p=l.split('|').map(x=>x.trim());return{nama:p[0]||'',qty:parseFloat(p[1])||0,satuan:p[2]||'gram'};}).filter(b=>b.nama&&b.qty>0);
+  const bahan=bahanRaw.split('\n').map(l=>{
+    const p=l.split('|').map(x=>x.trim());
+    return{nama:p[0]||'',qty:parseFloat(p[1])||0,satuan:p[2]||'gram'};
+  }).filter(b=>b.nama&&b.qty>0);
+  
   if(!bahan.length)return alert('Format bahan tidak valid. Gunakan: Nama | Qty | Satuan');
+  
   const idx=parseInt($('resep-edit-idx').value);
+  // TODO: Insert/Update Recipe via Supabase
   if(idx>=0)DB.resep[bid][idx]={nama,porsi,satuanYield,catatan,bahan};
   else DB.resep[bid].push({nama,porsi,satuanYield,catatan,bahan});
+  
   $('resep-edit-idx').value='-1';
   closeModal('modal-resep-add');renderResep();
 }
@@ -1201,7 +1343,13 @@ function approveTransfer(idx){
       it.stok=R(it.stok-t.qty);
       DB.keluarLog[t.fromBrand].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:it.nama,qty:t.qty,satuan:it.satuan,alasan:`Transfer ke ${DB.brands[t.toBrand].name}`});
       const toFound=allFlat(t.toBrand).find(i=>i.nama.toLowerCase()===t.item.toLowerCase());
-      if(toFound){const toIt=bItems(t.toBrand)[toFound.cat]?.find(i=>i.nama===toFound.nama);if(toIt){toIt.stok=R(toIt.stok+t.qty);DB.masukLog[t.toBrand].push({ts:new Date().toISOString(),tgl:today(),cat:toFound.cat,nama:toIt.nama,qty:t.qty,satuan:toIt.satuan,supplier:`Transfer dari ${DB.brands[t.fromBrand].name}`,catatan:t.alasan});}}
+      if(toFound){
+        const toIt=bItems(t.toBrand)[toFound.cat]?.find(i=>i.nama===toFound.nama);
+        if(toIt){
+          toIt.stok=R(toIt.stok+t.qty);
+          DB.masukLog[t.toBrand].push({ts:new Date().toISOString(),tgl:today(),cat:toFound.cat,nama:toIt.nama,qty:t.qty,satuan:toIt.satuan,supplier:`Transfer dari ${DB.brands[t.fromBrand].name}`,catatan:t.alasan});
+        }
+      }
     }
   }
   t.status='Approved';t.approvedBy=SESSION.user.username;t.approvedAt=new Date().toISOString();
@@ -1264,7 +1412,10 @@ function submitSDM(){
   if(!nama)return alert('Nama karyawan wajib diisi');
   const existing=DB.sdm[bid].findIndex(s=>s.nama.toLowerCase()===nama.toLowerCase());
   const entry={nama,posisi,shift,aktual,satuanHasil,note,tgl:today()};
+  
+  // TODO: Upsert via Supabase
   if(existing>=0)DB.sdm[bid][existing]=entry;else DB.sdm[bid].push(entry);
+  
   closeModal('modal-sdm-add');renderSDM();
 }
 function updateSDMAktual(i){
@@ -1325,10 +1476,16 @@ function renderLaporan(){
   const kI=(DB.masukLog[bid]||[]).filter(l=>l.tgl===tgl);
   const kW=(DB.wasteLog[bid]||[]).filter(l=>l.tgl===tgl);
   const kT=(DB.transferLog||[]).filter(t=>(t.fromBrand===bid||t.toBrand===bid)&&t.tgl===tgl&&t.status==='Approved');
-  $('lap-k').textContent=kO.length;$('lap-m').textContent=kI.length;$('lap-w').textContent=kW.length;$('lap-t').textContent=kT.length;
+  
+  $('lap-k').textContent=kO.length;
+  $('lap-m').textContent=kI.length;
+  $('lap-w').textContent=kW.length;
+  $('lap-t').textContent=kT.length;
+  
   const all=[...kI.map(l=>({...l,_t:'masuk'})),...kO.map(l=>({...l,_t:'keluar'})),...kW.map(l=>({...l,_t:'waste'})),...kT.map(t=>({...t,_t:'transfer'}))].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
   const tCol={masuk:'var(--green)',keluar:'var(--orange)',waste:'var(--red)',transfer:'var(--blue)'};
   const tLbl={masuk:'Stok Masuk',keluar:'Stok Keluar',waste:'Waste',transfer:'Transfer'};
+  
   $('lap-body').innerHTML=all.length?all.map(l=>{const col=tCol[l._t];const name=l.nama||l.item||l.fromBrand||'-';const qty=l.qty||'';const sat=l.satuan||'';const desc=l.alasan||l.sebab||l.catatan||l.supplier||'';return`<div class="waste-entry"><div class="waste-dot" style="background:${col}"></div><div style="flex:1"><div style="font-weight:500">${name}${qty?' — ':''}<span class="mono" style="color:${col}">${qty?qty+' '+sat:''}</span></div><div style="font-size:10px;color:var(--text3);margin-top:1px">${desc}</div></div><div style="text-align:right;flex-shrink:0"><span class="badge" style="color:${col};border-color:${col}33;background:${col}18">${tLbl[l._t]}</span><div style="font-size:10px;color:var(--text3);margin-top:3px">${new Date(l.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;}).join(''):'<div class="empty">Tidak ada aktivitas pada tanggal ini</div>';
 }
 
@@ -1341,25 +1498,38 @@ function renderHQDash(){
   bids.forEach(bid=>{allFlat(bid).forEach(it=>{const[,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger')totK++;else if(c==='b-warn')totR++;});todW+=(DB.wasteLog[bid]||[]).filter(w=>w.tgl===t).length;});
   const pend=(DB.transferLog||[]).filter(tr=>tr.status==='Pending').length;
   $('hq-kritis').textContent=totK;$('hq-reorder').textContent=totR;$('hq-brands').textContent=bids.length;$('hq-tr-pend').textContent=pend;$('hq-waste').textContent=todW;
+  
   $('hq-brand-grid').innerHTML=bids.map(bid=>{const b=DB.brands[bid];let k=0,r=0,a=0;allFlat(bid).forEach(it=>{const[,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger')k++;else if(c==='b-warn')r++;else a++;});const pic=DB.users.find(u=>u.brand===bid&&u.role==='pic');return`<div class="brand-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.7rem"><div><div style="font-size:14px;font-weight:600;color:${b.color}">${b.name}</div><div style="font-size:10px;color:var(--text3)">${pic?pic.nama:'—'}</div></div><button class="btn btn-sm" onclick="viewBrand('${bid}')">Lihat →</button></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--red)">${k}</div><div style="font-size:9px;color:var(--text3)">Kritis</div></div><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--orange)">${r}</div><div style="font-size:9px;color:var(--text3)">Reorder</div></div><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--green)">${a}</div><div style="font-size:9px;color:var(--text3)">Aman</div></div></div></div>`;}).join('');
+  
   const alerts=[];bids.forEach(bid=>{allFlat(bid).forEach(it=>{const[s,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger'||c==='b-warn')alerts.push({bid,...it,s,c});});});
   $('hq-alert-tbl').innerHTML=alerts.length?alerts.map(it=>{const avg=R(avgKeluar7(it.bid,it.cat,it.nama));const h=avg>0?R(it.stok/avg,1):null;return`<tr><td><span class="badge" style="color:${DB.brands[it.bid].color}">${DB.brands[it.bid].name}</span></td><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${it.c}">${it.s}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Semua brand aman</td></tr>';
 }
-function viewBrand(bid){SESSION.brandId=bid;refreshSidebar();buildStokTabs();buildCatDropdowns();goto('stok');}
+
+function viewBrand(bid){
+  SESSION.brandId=bid;
+  refreshSidebar();
+  buildStokTabs();
+  buildCatDropdowns();
+  goto('stok');
+}
+
 function renderHQBrands(){
   const bids=Object.keys(DB.brands);
   const chips=$('hq-brand-chips');
   chips.innerHTML=bids.map((bid,i)=>`<div class="tab${i===0?' active':''}" id="chip-${bid}" onclick="selectHQBrand('${bid}')" style="${i===0?'color:'+DB.brands[bid].color+';background:'+DB.brands[bid].color+'14;border-color:'+DB.brands[bid].color+'66':''}">${DB.brands[bid].name}</div>`).join('');
   selectHQBrand(bids[0]);
 }
+
 function selectHQBrand(bid){
   document.querySelectorAll('#hq-brand-chips .tab').forEach(c=>{c.classList.remove('active');c.style.cssText='';});
-  const chip=$('chip-'+bid);if(chip){chip.classList.add('active');chip.style.color=DB.brands[bid].color;chip.style.background=DB.brands[bid].color+'14';chip.style.borderColor=DB.brands[bid].color+'66';}
+  const chip=$('chip-'+bid);
+  if(chip){chip.classList.add('active');chip.style.color=DB.brands[bid].color;chip.style.background=DB.brands[bid].color+'14';chip.style.borderColor=DB.brands[bid].color+'66';}
   SESSION.brandId=bid;
   const t=today(),s7=addD(t,-7);
   const detail=$('hq-brand-detail');
   detail.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">${CATS.map(cat=>{const items=bItems(bid)[cat]||[];const k=items.filter(i=>statusItem(bid,cat,i.nama)[1]==='b-danger').length;return`<div class="card"><div class="card-header"><span class="card-title">${cat}</span><span class="mono" style="font-size:10px;color:var(--text3)">${items.length} item${k>0?` · <span style="color:var(--red)">${k} kritis</span>`:''}</span></div><table class="tbl"><thead><tr><th>Nama</th><th>Stok</th><th>Bertahan</th><th>Status</th></tr></thead><tbody>${items.map(it=>{const avg=avgKeluar(bid,cat,it.nama,s7,t);const h=avg>0?R(it.stok/avg,1):null;const[s,c]=statusItem(bid,cat,it.nama);return`<tr><td>${it.nama}</td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;}).join('')||'<tr><td colspan="4" class="empty">Kosong</td></tr>'}</tbody></table></div>`;}).join('')}</div>`;
 }
+
 function renderHQTransfer(){
   const all=DB.transferLog||[];
   const pend=all.filter(t=>t.status==='Pending').length,app=all.filter(t=>t.status==='Approved').length,rej=all.filter(t=>t.status==='Rejected').length;
@@ -1369,6 +1539,7 @@ function renderHQTransfer(){
   $('hqt-to').innerHTML=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
   $('hqt-tbl').innerHTML=[...all].reverse().map((t,ri)=>{const idx=all.length-1-ri;const sc=t.status==='Approved'?'b-ok':t.status==='Rejected'?'b-danger':'b-warn';return`<tr><td class="mono" style="font-size:10px">${fmtD(t.tgl)}</td><td style="font-size:10px">${t.reqBy}</td><td><span class="badge" style="color:${DB.brands[t.fromBrand]?.color||'var(--text2)'}">${DB.brands[t.fromBrand]?.name}</span></td><td><span class="badge" style="color:${DB.brands[t.toBrand]?.color||'var(--text2)'}">${DB.brands[t.toBrand]?.name}</span></td><td>${t.item}</td><td class="mono">${t.qty} ${t.satuan}</td><td style="color:var(--text3);font-size:10px">${t.alasan||'-'}</td><td><span class="badge ${sc}">${t.status}</span></td><td>${t.status==='Pending'?`<div class="flex-row" style="gap:4px"><button class="btn btn-sm" style="color:var(--green)" onclick="approveTransfer(${idx})">OK</button><button class="btn btn-sm btn-danger" onclick="rejectTransfer(${idx})">Tolak</button></div>`:'-'}</td></tr>`;}).join('')||'<tr><td colspan="9" class="empty">Belum ada transfer</td></tr>';
 }
+
 function submitTransferHQ(){
   const from=$('hqt-from').value,to=$('hqt-to').value;
   if(from===to)return alert('Brand asal dan tujuan tidak boleh sama');
@@ -1377,8 +1548,11 @@ function submitTransferHQ(){
   const idx=DB.transferLog.length;
   DB.transferLog.push({ts:new Date().toISOString(),tgl:today(),fromBrand:from,toBrand:to,item,qty,satuan,alasan:note||'Transfer oleh Admin',status:'Pending',reqBy:SESSION.user.username});
   closeModal('modal-tr-hq');
-  approveTransfer(idx);renderHQTransfer();renderHQDash();
+  approveTransfer(idx);
+  renderHQTransfer();
+  renderHQDash();
 }
+
 function renderHQSDM(){
   const bids=Object.keys(DB.brands);
   const chips=$('hq-sdm-chips');
@@ -1393,6 +1567,7 @@ function selectHQSDMBrand(bid){
   if(!sdms.length){detail.innerHTML='<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada karyawan terdaftar di brand ini</div>';return;}
   detail.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">${sdms.map(k=>{const p=posisis.find(p=>p.nama===k.posisi);const pct=p&&p.target>0?Math.round(k.aktual/p.target*100):0;const col=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)';return`<div class="kpi-card"><div class="kpi-name">${k.nama}</div><div class="kpi-meta">${k.posisi} · ${k.shift}</div><div class="kpi-row" style="margin-top:.5rem"><span style="color:var(--text3)">Aktual</span><span class="mono">${k.aktual} ${k.satuanHasil||''}</span></div><div class="kpi-row"><span style="color:var(--text3)">Target</span><span class="mono">${p?p.target+' '+p.satuan:'-'}</span></div><div class="kpi-row"><span style="color:var(--text3)">KPI</span><span class="kpi-pct" style="color:${col}">${pct}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div></div>`;}).join('')}</div>`;
 }
+
 function renderUsers(){
   const bids=Object.keys(DB.brands);
   $('nu-brand').innerHTML=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
@@ -1403,38 +1578,40 @@ function submitAddUser(){
   const username=$('nu-user').value.trim(),password=$('nu-pass').value,nama=$('nu-nama').value.trim(),role=$('nu-role').value,brand=role==='admin'?null:$('nu-brand').value;
   if(!username||!password||!nama)return alert('Isi semua field');
   if(DB.users.find(u=>u.username===username))return alert('Username sudah ada');
+  
+  // TODO: Supabase integration for new user
   DB.users.push({username,password,nama,role,brand,active:true});
+  
   closeModal('modal-add-user');renderUsers();
 }
 function toggleUser(i){DB.users[i].active=!DB.users[i].active;renderUsers();}
 function resetPass(i){const p=prompt('Password baru untuk '+DB.users[i].username+':');if(p){DB.users[i].password=p;alert('Password berhasil direset');}}
+
 function populateBrandDropdowns(){
   const bids=Object.keys(DB.brands);const opts=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
   ['hqt-from','hqt-to','nb-pic'].forEach(id=>{const el=$(id);if(el)el.innerHTML=id==='nb-pic'?'<option value="">Pilih user...</option>'+DB.users.filter(u=>u.role==='pic').map(u=>`<option value="${u.username}">${u.nama}</option>`).join(''):opts;});
   $('nb-pic').innerHTML='<option value="">Pilih user (opsional)</option>'+DB.users.filter(u=>u.role==='pic').map(u=>`<option value="${u.username}">${u.nama} (${u.username})</option>`).join('');
 }
+
 function initBrandAdd(){populateBrandDropdowns();}
 function submitNewBrand(){
   const nama=$('nb-nama').value.trim(),color=$('nb-color').value,picU=$('nb-pic').value;
   if(!nama)return alert('Nama brand wajib diisi');
+  
   const bid='brand'+Date.now().toString().slice(-6);
+  // TODO: Supabase insert brand
   DB.brands[bid]={name:nama,color,items:{'Bahan Baku':[],'Saus':[],'Bumbu':[],'Kemasan':[],'Perlengkapan':[]}};
   DB.keluarLog[bid]=[];DB.masukLog[bid]=[];DB.wasteLog[bid]=[];DB.orderLog[bid]=[];DB.resep[bid]=[];DB.sdm[bid]=[];
   DB.posisi[bid]=[{nama:'Operator Produksi',target:50,satuan:'porsi'},{nama:'Supervisor',target:60,satuan:'porsi'}];
   DB.shifts[bid]=[{nama:'Pagi',start:'06:00',end:'14:00'},{nama:'Sore',start:'14:00',end:'22:00'},{nama:'Malam',start:'22:00',end:'06:00'}];
   if(picU){const user=DB.users.find(u=>u.username===picU);if(user)user.brand=bid;}
+  
   populateBrandDropdowns();
   alert(`Brand "${nama}" berhasil dibuat!`);$('nb-nama').value='';
 }
 
-// ─ Fix posisi & shift modal open handlers ─
-document.querySelectorAll('button[onclick*="modal-posisi-mgr"], button[onclick*="modal-shift-mgr"]').forEach(btn=>{
-  const id=btn.getAttribute('onclick').match(/'([^']+)'/)[1];
-  btn.addEventListener('click',()=>{if(id==='modal-posisi-mgr')renderPosisiTable();else renderShiftTable();});
-});
 function loadCompanyPage(){
   $('comp-name').value = DB.company.name;
-
   const sel = $('comp-brand-select');
   sel.innerHTML = '';
   Object.keys(DB.brands).forEach(b=>{
@@ -1443,29 +1620,24 @@ function loadCompanyPage(){
     opt.textContent = DB.brands[b].name;
     sel.appendChild(opt);
   });
-
   $('comp-logo-preview').src = DB.company.logo || '';
 }
 
 function saveCompany(){
-  // nama perusahaan
   DB.company.name = $('comp-name').value;
-
-  // update label
   $('comp-name-label').textContent = DB.company.name;
 
-  // ubah nama brand
   const bid = $('comp-brand-select').value;
   const newName = $('comp-brand-name').value;
   if(newName){
     DB.brands[bid].name = newName;
   }
 
-  // logo upload
   const file = $('comp-logo').files[0];
   if(file){
     const reader = new FileReader();
     reader.onload = function(e){
+      // TODO: Supabase Storage upload
       DB.company.logo = e.target.result;
       $('comp-logo-img').src = DB.company.logo;
       $('comp-logo-preview').src = DB.company.logo;
@@ -1476,8 +1648,6 @@ function saveCompany(){
   refreshSidebar();
   alert('Perubahan disimpan');
 }
-
-
 </script>
 </body>
 </html>
