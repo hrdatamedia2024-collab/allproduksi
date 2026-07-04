@@ -492,6 +492,10 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
         Menghapus seluruh riwayat <b>Stok Masuk</b>, <b>Stok Keluar</b>, <b>Waste</b>, <b>Order</b>, dan <b>Transfer Stok</b> di semua brand.
         Data <b>brand, item, dan karyawan tidak akan terhapus</b>. Aksi ini tidak bisa dibatalkan.
       </p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+        <input type="checkbox" id="reset-stok-juga" style="width:auto"/>
+        <label for="reset-stok-juga" style="font-size:.85rem;margin:0">Reset juga angka stok semua item ke 0</label>
+      </div>
       <button class="btn btn-danger" onclick="resetDataTransaksi()">🗑 Hapus Semua Data Transaksi</button>
     </div>
   </div>
@@ -1743,10 +1747,13 @@ function saveCompany(){
 }
 
 function resetDataTransaksi(){
+  const resetStok = $('reset-stok-juga') && $('reset-stok-juga').checked;
+
   const konfirmasi1 = confirm(
     'Ini akan MENGHAPUS PERMANEN seluruh riwayat:\n' +
-    '- Stok Masuk\n- Stok Keluar Harian\n- Waste\n- Order & Rekomendasi\n- Transfer Stok\n\n' +
-    'di SEMUA brand. Data brand, item, dan karyawan TIDAK terhapus.\n\n' +
+    '- Stok Masuk\n- Stok Keluar Harian\n- Waste\n- Order & Rekomendasi\n- Transfer Stok\n' +
+    (resetStok ? '- Angka stok SEMUA ITEM akan direset ke 0\n' : '') +
+    '\ndi SEMUA brand. Data brand, item, dan karyawan TIDAK terhapus (hanya angkanya).\n\n' +
     'Lanjutkan?'
   );
   if(!konfirmasi1) return;
@@ -1762,10 +1769,17 @@ function resetDataTransaksi(){
     DB.masukLog[bid] = [];
     DB.wasteLog[bid] = [];
     DB.orderLog[bid] = [];
+
+    if(resetStok){
+      const items = DB.brands[bid].items;
+      Object.keys(items).forEach(cat=>{
+        items[cat].forEach(it=>{ it.stok = 0; });
+      });
+    }
   });
   DB.transferLog = [];
 
-  alert('Semua data transaksi berhasil dihapus. Brand, item, dan karyawan tetap tersimpan.');
+  alert('Semua data transaksi berhasil dihapus.' + (resetStok ? ' Stok semua item juga direset ke 0.' : '') + ' Brand, item, dan karyawan tetap tersimpan.');
 
   if(typeof goto === 'function') goto(SESSION.brandId ? 'dashboard' : 'hq-dash');
 }
