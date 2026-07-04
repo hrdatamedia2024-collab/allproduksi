@@ -641,55 +641,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
 <!-- SCRIPT UTAMA & SUPABASE CONFIGURATION      -->
 <!-- ========================================== -->
 <script>
-// ═══════════════════════════════════════════════════
-// SUPABASE INITIALIZATION
-// ═══════════════════════════════════════════════════
-/* 
-Ganti YOUR_SUPABASE_URL dan YOUR_SUPABASE_ANON_KEY dengan kredensial dari 
-Dashboard Supabase Anda (Project Settings -> API).
-*/
-const supabaseUrl = 'sb_publishable_n9BDsGV-oOu6nbtQrcbYqg_VkSOPWCE';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2emFmZHhyaHpsenZ1YmxveG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNDQ1MjQsImV4cCI6MjA5ODcyMDUyNH0.w3TFFFMF5dr9GJpGQQn9OzSAU0dPcKUKCFUffOEXjdQ';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-/*
-CONTOH IMPLEMENTASI SUPABASE:
-Untuk mengganti penyimpanan array lokal di variabel "DB", Anda perlu memodifikasi fungsi-fungsi submit
-seperti submitStokMasuk() menjadi fungsi async. 
-
-Contoh Kasus pada "submitStokMasuk":
-
-async function submitStokMasuk() {
-  const bid = SESSION.brandId;
-  const tgl = $('sm-tgl').value || today();
-  const cat = $('sm-cat').value;
-  const nama = $('sm-item').value;
-  const qty = parseFloat($('sm-qty').value) || 0;
-  const sup = $('sm-sup').value;
-  const note = $('sm-note').value;
-
-  if(qty <= 0) return alert('Jumlah harus lebih dari 0');
-
-  // GANTI KODE LOKAL:
-  // it.stok = R(it.stok+qty);
-  // DB.masukLog[bid].push({...});
-
-  // MENJADI KODE SUPABASE:
-  const { data, error } = await supabase
-    .from('stok_masuk_log') // Pastikan tabel ini sudah dibuat di Supabase
-    .insert([
-      { brand_id: bid, tanggal: tgl, kategori: cat, nama_item: nama, qty: qty, supplier: sup, catatan: note }
-    ]);
-
-  if (error) {
-    alert("Gagal menyimpan ke database!");
-    console.error(error);
-  } else {
-    alert(`✓ Stok masuk tersimpan di Supabase!`);
-    // Panggil ulang fungsi render Anda di sini
-  }
-}
-*/
+// (Konfigurasi & sinkronisasi Supabase yang aktif ada di bagian bawah, dekat definisi DB)
 
 // ═══════════════════════════════════════════════════
 // GLOBAL DATA (DATA LOKAL)
@@ -828,24 +780,31 @@ async function initSupabaseSync(){
   userInput.disabled = true; passInput.disabled = true;
 
   try{
-    const { data, error } = await sb.from('app_state').select('data').eq('id', STATE_ROW_ID).single();
+    const { data, error } = await sb.from('app_state').select('data').eq('id', STATE_ROW_ID).maybeSingle();
 
-    if(data && data.data){
+    if(error){
+      console.error('Supabase select error:', error);
+      if(msgEl){ msgEl.textContent='Gagal load: '+error.message; msgEl.style.color='var(--red)'; }
+    }else if(data && data.data){
       Object.keys(rawDB).forEach(k=>delete rawDB[k]);
       Object.assign(rawDB, data.data);
       if(msgEl){ msgEl.textContent='Data berhasil dimuat dari cloud.'; msgEl.style.color='var(--green)'; }
     }else{
-      await sb.from('app_state').insert({ id: STATE_ROW_ID, data: JSON.parse(JSON.stringify(rawDB)), updated_at: new Date().toISOString() });
-      if(msgEl){ msgEl.textContent='Database awal berhasil dibuat di Supabase.'; msgEl.style.color='var(--green)'; }
+      const { error: insErr } = await sb.from('app_state').insert({ id: STATE_ROW_ID, data: JSON.parse(JSON.stringify(rawDB)), updated_at: new Date().toISOString() });
+      if(insErr){
+        console.error('Supabase insert error:', insErr);
+        if(msgEl){ msgEl.textContent='Gagal buat data awal: '+insErr.message; msgEl.style.color='var(--red)'; }
+      }else{
+        if(msgEl){ msgEl.textContent='Database awal berhasil dibuat di Supabase.'; msgEl.style.color='var(--green)'; }
+      }
     }
   }catch(e){
-    console.error('Supabase load error:', e);
-    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase. Cek URL/Key & koneksi.'; msgEl.style.color='var(--red)'; }
+    console.error('Supabase load exception:', e);
+    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase: '+e.message; msgEl.style.color='var(--red)'; }
   }
 
   userInput.disabled = false; passInput.disabled = false;
   syncReady = true;
-  setTimeout(()=>{ if(msgEl) msgEl.textContent=''; }, 5000);
 }
 
 initSupabaseSync();
