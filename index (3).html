@@ -124,6 +124,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
   <div class="login-box">
     <div class="login-logo">PT ABC</div>
     <div class="login-sub">Sistem Manajemen Produksi</div>
+    <div id="sb-sync-msg" style="font-size:11px;color:var(--text3);margin-bottom:1rem;min-height:14px"></div>
     <div class="ff" style="margin-bottom:.7rem"><label>Username</label><input type="text" id="l-user" autocomplete="off"/></div>
     <div class="ff" style="margin-bottom:1rem"><label>Password</label><input type="password" id="l-pass"/></div>
     <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="doLogin()">Masuk</button>
@@ -172,6 +173,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
   <div class="sf">
     <div class="sf-user" id="sf-user">—</div>
     <div class="sf-role" id="sf-role">—</div>
+    <div id="sync-status" style="font-size:10px;margin-top:4px;color:var(--text3)"></div>
     <div style="margin-top:.5rem"><button class="btn btn-sm btn-danger" onclick="doLogout()">Keluar</button></div>
   </div>
 </aside>
@@ -729,6 +731,124 @@ Object.keys(DB.brands).forEach(bid=>{
   DB.posisi[bid]=[{nama:'Operator Produksi',target:50,satuan:'porsi'},{nama:'Supervisor',target:60,satuan:'porsi'},{nama:'QC',target:40,satuan:'pcs'},{nama:'Gudang',target:30,satuan:'item'},{nama:'Kasir/Admin',target:1,satuan:'laporan'}];
   DB.shifts[bid]=[{nama:'Pagi',start:'06:00',end:'14:00'},{nama:'Sore',start:'14:00',end:'22:00'},{nama:'Malam',start:'22:00',end:'06:00'}];
 });
+
+// ═══════════════════════════════════════════════════
+// SUPABASE SYNC
+// ═══════════════════════════════════════════════════
+// 1) Buat project di https://supabase.com
+// 2) Di SQL Editor, jalankan:
+//      create table app_state (
+//        id text primary key,
+//        data jsonb,
+//        updated_at timestamptz default now()
+//      );
+//      alter table app_state enable row level security;
+//      create policy "anon read" on app_state for select using (true);
+//      create policy "anon write" on app_state for insert with check (true);
+//      create policy "anon update" on app_state for update using (true);
+// 3) Ambil URL & anon key di Settings > API, isi di bawah ini.
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const STATE_ROW_ID = 'main';
+
+const sbConfigured = !SUPABASE_URL.includes('YOUR_SUPABASE_URL') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
+const sb = sbConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let syncReady = false;
+let saveTimer = null;
+
+function setSyncStatus(status){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  if(status==='saving'){ el.textContent='⏳ Menyimpan ke cloud...'; el.style.color='var(--orange)'; }
+  else if(status==='saved'){ el.textContent='✓ Tersinkron ke Supabase'; el.style.color='var(--green)'; }
+  else if(status==='error'){ el.textContent='⚠ Gagal sync ke Supabase'; el.style.color='var(--red)'; }
+  else if(status==='offline'){ el.textContent='○ Mode lokal (Supabase belum diatur)'; el.style.color='var(--text3)'; }
+  else{ el.textContent=''; }
+}
+
+function scheduleSave(){
+  if(!sbConfigured || !syncReady) return;
+  clearTimeout(saveTimer);
+  setSyncStatus('saving');
+  saveTimer = setTimeout(saveStateToSupabase, 900);
+}
+
+async function saveStateToSupabase(){
+  try{
+    const payload = JSON.parse(JSON.stringify(rawDB));
+    const { error } = await sb.from('app_state').upsert({ id: STATE_ROW_ID, data: payload, updated_at: new Date().toISOString() });
+    setSyncStatus(error ? 'error' : 'saved');
+    if(error) console.error('Supabase save error:', error);
+  }catch(e){
+    console.error('Supabase save exception:', e);
+    setSyncStatus('error');
+  }
+}
+
+// Deep proxy: setiap perubahan pada DB (assign, push, splice, delete, dst)
+// di mana pun tingkat kedalamannya, otomatis memicu penyimpanan ke Supabase.
+function deepProxy(target, onChange){
+  if(target===null || typeof target!=='object') return target;
+  return new Proxy(target, {
+    get(obj, prop){
+      const val = obj[prop];
+      if(val && typeof val==='object') return deepProxy(val, onChange);
+      return val;
+    },
+    set(obj, prop, value){
+      obj[prop]=value;
+      onChange();
+      return true;
+    },
+    deleteProperty(obj, prop){
+      delete obj[prop];
+      onChange();
+      return true;
+    }
+  });
+}
+
+const rawDB = DB; // referensi mentah, dipakai untuk baca/tulis Supabase
+DB = deepProxy(rawDB, scheduleSave);
+
+async function initSupabaseSync(){
+  const msgEl = document.getElementById('sb-sync-msg');
+  const userInput = document.getElementById('l-user');
+  const passInput = document.getElementById('l-pass');
+
+  if(!sbConfigured){
+    if(msgEl){ msgEl.textContent='Mode lokal: isi SUPABASE_URL & SUPABASE_ANON_KEY untuk aktifkan sinkronisasi cloud.'; msgEl.style.color='var(--orange)'; }
+    setSyncStatus('offline');
+    syncReady = true;
+    return;
+  }
+
+  if(msgEl){ msgEl.textContent='Menghubungkan ke database...'; msgEl.style.color='var(--text3)'; }
+  userInput.disabled = true; passInput.disabled = true;
+
+  try{
+    const { data, error } = await sb.from('app_state').select('data').eq('id', STATE_ROW_ID).single();
+
+    if(data && data.data){
+      Object.keys(rawDB).forEach(k=>delete rawDB[k]);
+      Object.assign(rawDB, data.data);
+      if(msgEl){ msgEl.textContent='Data berhasil dimuat dari cloud.'; msgEl.style.color='var(--green)'; }
+    }else{
+      await sb.from('app_state').insert({ id: STATE_ROW_ID, data: JSON.parse(JSON.stringify(rawDB)), updated_at: new Date().toISOString() });
+      if(msgEl){ msgEl.textContent='Database awal berhasil dibuat di Supabase.'; msgEl.style.color='var(--green)'; }
+    }
+  }catch(e){
+    console.error('Supabase load error:', e);
+    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase. Cek URL/Key & koneksi.'; msgEl.style.color='var(--red)'; }
+  }
+
+  userInput.disabled = false; passInput.disabled = false;
+  syncReady = true;
+  setTimeout(()=>{ if(msgEl) msgEl.textContent=''; }, 5000);
+}
+
+initSupabaseSync();
 
 let SESSION={user:null,brandId:null};
 
@@ -1579,7 +1699,7 @@ function submitAddUser(){
   if(!username||!password||!nama)return alert('Isi semua field');
   if(DB.users.find(u=>u.username===username))return alert('Username sudah ada');
   
-  // TODO: Supabase integration for new user
+  // Otomatis tersinkron ke Supabase (lihat deepProxy di atas)
   DB.users.push({username,password,nama,role,brand,active:true});
   
   closeModal('modal-add-user');renderUsers();
@@ -1599,7 +1719,7 @@ function submitNewBrand(){
   if(!nama)return alert('Nama brand wajib diisi');
   
   const bid='brand'+Date.now().toString().slice(-6);
-  // TODO: Supabase insert brand
+  // Otomatis tersinkron ke Supabase (lihat deepProxy di atas)
   DB.brands[bid]={name:nama,color,items:{'Bahan Baku':[],'Saus':[],'Bumbu':[],'Kemasan':[],'Perlengkapan':[]}};
   DB.keluarLog[bid]=[];DB.masukLog[bid]=[];DB.wasteLog[bid]=[];DB.orderLog[bid]=[];DB.resep[bid]=[];DB.sdm[bid]=[];
   DB.posisi[bid]=[{nama:'Operator Produksi',target:50,satuan:'porsi'},{nama:'Supervisor',target:60,satuan:'porsi'}];
@@ -1637,7 +1757,7 @@ function saveCompany(){
   if(file){
     const reader = new FileReader();
     reader.onload = function(e){
-      // TODO: Supabase Storage upload
+      // Disimpan sebagai base64 di dalam data JSON (tersinkron otomatis ke Supabase)
       DB.company.logo = e.target.result;
       $('comp-logo-img').src = DB.company.logo;
       $('comp-logo-preview').src = DB.company.logo;
