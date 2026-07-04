@@ -482,6 +482,20 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
 
     </div>
   </div>
+
+  <div class="card" style="max-width:500px;border:1px solid var(--red);margin-top:1.2rem">
+    <div class="card-header">
+      <span class="card-title" style="color:var(--red)">Zona Berbahaya</span>
+    </div>
+    <div style="padding:1rem">
+      <p style="font-size:.85rem;color:var(--text2);margin-bottom:1rem">
+        Menghapus seluruh riwayat <b>Stok Masuk</b>, <b>Stok Keluar</b>, <b>Waste</b>, <b>Order</b>, dan <b>Transfer Stok</b> di semua brand.
+        Data <b>brand, item, dan karyawan tidak akan terhapus</b>. Aksi ini tidak bisa dibatalkan.
+      </p>
+      <button class="btn btn-danger" onclick="resetDataTransaksi()">🗑 Hapus Semua Data Transaksi</button>
+    </div>
+  </div>
+
 </div>
 </main>
 </div>
@@ -1726,6 +1740,34 @@ function saveCompany(){
 
   refreshSidebar();
   alert('Perubahan disimpan');
+}
+
+function resetDataTransaksi(){
+  const konfirmasi1 = confirm(
+    'Ini akan MENGHAPUS PERMANEN seluruh riwayat:\n' +
+    '- Stok Masuk\n- Stok Keluar Harian\n- Waste\n- Order & Rekomendasi\n- Transfer Stok\n\n' +
+    'di SEMUA brand. Data brand, item, dan karyawan TIDAK terhapus.\n\n' +
+    'Lanjutkan?'
+  );
+  if(!konfirmasi1) return;
+
+  const konfirmasi2 = prompt('Ketik "HAPUS" (huruf besar) untuk konfirmasi akhir:');
+  if(konfirmasi2 !== 'HAPUS'){
+    alert('Dibatalkan. Tidak ada data yang dihapus.');
+    return;
+  }
+
+  Object.keys(DB.brands).forEach(bid=>{
+    DB.keluarLog[bid] = [];
+    DB.masukLog[bid] = [];
+    DB.wasteLog[bid] = [];
+    DB.orderLog[bid] = [];
+  });
+  DB.transferLog = [];
+
+  alert('Semua data transaksi berhasil dihapus. Brand, item, dan karyawan tetap tersimpan.');
+
+  if(typeof goto === 'function') goto(SESSION.brandId ? 'dashboard' : 'hq-dash');
 }
 </script>
 </body>
