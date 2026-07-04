@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PT ABC — Sistem Produksi v3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0f0f0e;--bg2:#1a1a18;--bg3:#242422;--bg4:#2e2e2b;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#f0ede8;--text2:#9e9b95;--text3:#5a5855;--accent:#e8c547;--accent2:#c4a330;--red:#e05c5c;--green:#6abf7b;--orange:#e8924a;--blue:#5b9bd5;--purple:#9b7fd4;--r:9px;--rl:13px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;min-height:100vh;}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rl);padding:2rem;width:370px;}
+.login-logo{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.login-sub{font-size:11px;color:var(--text3);margin-bottom:1.5rem;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:215px;background:var(--bg2);border-right:.5px solid var(--border);padding:1rem 0;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.logo{padding:0 1rem 1rem;border-bottom:.5px solid var(--border);}
+.logo-tag{font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;}
+.logo-name{font-size:16px;font-weight:700;color:var(--accent);margin-top:2px;}
+.logo-brand{font-size:11px;color:var(--text2);margin-top:1px;}
+.nav-sec{padding:.5rem 0;}
+.nav-lbl{font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;padding:0 1rem;margin-bottom:3px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:6px 1rem;cursor:pointer;color:var(--text2);font-size:12px;transition:all .1s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--bg3);}
+.nav-item.active{color:var(--accent);background:rgba(232,197,71,.06);border-left-color:var(--accent);}
+.nav-icon{width:14px;text-align:center;font-size:11px;}
+.sf{margin-top:auto;padding:.8rem 1rem;border-top:.5px solid var(--border);}
+.sf-user{font-size:12px;font-weight:500;margin-bottom:2px;}
+.sf-role{font-size:10px;color:var(--text3);}
+.topbar{background:var(--bg2);border-bottom:.5px solid var(--border);padding:.7rem 1.3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:14px;font-weight:600;}
+.page{display:none;padding:1.2rem 1.3rem;}
+.page.active{display:block;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin-bottom:1rem;}
+.metric{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:.8rem 1rem;}
+.metric-label{font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+.metric-value{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.m-d .metric-value{color:var(--red);}.m-w .metric-value{color:var(--orange);}.m-g .metric-value{color:var(--green);}.m-a .metric-value{color:var(--accent);}.m-b .metric-value{color:var(--blue);}.m-p .metric-value{color:var(--purple);}
+.card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);margin-bottom:1rem;overflow:hidden;}
+.card-header{padding:9px 13px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.card-title{font-size:11.5px;font-weight:500;color:var(--text2);}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.tbl th{text-align:left;font-size:9px;font-weight:500;color:var(--text3);padding:7px 11px;border-bottom:.5px solid var(--border);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
+.tbl td{padding:8px 11px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,.015);}
+.badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:500;display:inline-block;font-family:'DM Mono',monospace;white-space:nowrap;}
+.b-ok{background:rgba(106,191,123,.12);color:var(--green);border:.5px solid rgba(106,191,123,.25);}
+.b-warn{background:rgba(232,146,74,.12);color:var(--orange);border:.5px solid rgba(232,146,74,.25);}
+.b-danger{background:rgba(224,92,92,.12);color:var(--red);border:.5px solid rgba(224,92,92,.25);}
+.b-blue{background:rgba(91,155,213,.12);color:var(--blue);border:.5px solid rgba(91,155,213,.25);}
+.b-accent{background:rgba(232,197,71,.12);color:var(--accent);border:.5px solid rgba(232,197,71,.25);}
+.b-purple{background:rgba(155,127,212,.12);color:var(--purple);border:.5px solid rgba(155,127,212,.25);}
+.b-gray{background:rgba(255,255,255,.07);color:var(--text2);border:.5px solid var(--border2);}
+.bar-bg{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:.85rem;}
+.ff{display:flex;flex-direction:column;gap:3px;}
+.ff label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.ff input,.ff select,.ff textarea{background:var(--bg3);border:.5px solid var(--border2);border-radius:var(--r);padding:6px 9px;color:var(--text);font-size:12px;font-family:'Sora',sans-serif;outline:none;width:100%;}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--accent);}
+.ff select option{background:var(--bg2);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r);border:.5px solid var(--border2);background:transparent;color:var(--text);font-size:11.5px;cursor:pointer;font-family:'Sora',sans-serif;transition:all .1s;}
+.btn:hover{background:var(--bg3);}
+.btn-accent{background:var(--accent);color:#0f0f0e;border-color:var(--accent);font-weight:500;}
+.btn-accent:hover{background:var(--accent2);}
+.btn-sm{padding:3px 8px;font-size:10px;}
+.btn-danger{color:var(--red);border-color:rgba(224,92,92,.3);}
+.btn-danger:hover{background:rgba(224,92,92,.08);}
+.btn-blue{color:var(--blue);border-color:rgba(91,155,213,.3);}
+.tabs{display:flex;gap:3px;margin-bottom:1rem;flex-wrap:wrap;}
+.tab{padding:5px 12px;border-radius:var(--r);font-size:11.5px;cursor:pointer;color:var(--text3);border:.5px solid transparent;transition:all .1s;}
+.tab.active{color:var(--accent);background:rgba(232,197,71,.08);border-color:rgba(232,197,71,.25);}
+.tab:hover:not(.active){color:var(--text2);background:var(--bg3);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rl);padding:1.3rem;width:540px;max-width:96vw;max-height:92vh;overflow-y:auto;}
+.modal-title{font-size:14px;font-weight:600;margin-bottom:1rem;}
+.sec-title{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;margin-top:1.2rem;}
+.flex-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.mono{font-family:'DM Mono',monospace;}
+.empty{text-align:center;padding:1.4rem;color:var(--text3);font-size:11.5px;}
+.tag-r{color:var(--red);}.tag-o{color:var(--orange);}.tag-g{color:var(--green);}.tag-a{color:var(--accent);}.tag-b{color:var(--blue);}
+.notif-dot{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-left:4px;vertical-align:middle;}
+.brand-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:.9rem 1rem;}
+.brand-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-bottom:1rem;}
+.daily-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:.5px solid var(--border);flex-wrap:wrap;}
+.daily-row:last-child{border-bottom:none;}
+.daily-input{width:80px;background:var(--bg3);border:.5px solid var(--border2);border-radius:var(--r);padding:5px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;text-align:right;}
+.daily-input:focus{border-color:var(--accent);}
+.waste-entry{display:flex;align-items:flex-start;gap:9px;padding:8px 13px;border-bottom:.5px solid var(--border);}
+.waste-entry:last-child{border-bottom:none;}
+.waste-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.kpi-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:.9rem 1rem;margin-bottom:.75rem;}
+.kpi-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.7rem;gap:8px;flex-wrap:wrap;}
+.kpi-name{font-size:13px;font-weight:600;}
+.kpi-meta{font-size:10px;color:var(--text3);}
+.kpi-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;margin-bottom:6px;}
+.kpi-pct{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;}
+.order-rec-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:.85rem 1rem;margin-bottom:.7rem;}
+.order-rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:.6rem;}
+.orc{text-align:center;background:var(--bg3);border-radius:var(--r);padding:6px 4px;}
+.orc-val{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;}
+.orc-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">PT ABC</div>
+    <div class="login-sub">Sistem Manajemen Produksi</div>
+    <div class="ff" style="margin-bottom:.7rem"><label>Username</label><input type="text" id="l-user" autocomplete="off"/></div>
+    <div class="ff" style="margin-bottom:1rem"><label>Password</label><input type="password" id="l-pass"/></div>
+    <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="doLogin()">Masuk</button>
+    <div id="l-err" style="color:var(--red);font-size:11px;margin-top:.5rem;text-align:center;display:none">Username atau password salah</div>
+    <div style="margin-top:1.2rem;padding-top:1rem;border-top:.5px solid var(--border);font-size:10px;color:var(--text3);line-height:1.9">
+      Demo: admin/admin123 · picA/picA123 · picB/picB123 · picC–E/picC–E+123
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="app" style="display:none">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-tag" id="comp-name-label">PT ABC</div>
+<img id="comp-logo-img" style="max-height:30px;margin-top:5px"/>
+    <div class="logo-name" id="sb-brand">—</div>
+    <div class="logo-brand" id="sb-role-lbl">—</div>
+  </div>
+  <nav class="nav-sec" id="nav-admin" style="display:none">
+    <div class="nav-lbl">Admin HQ</div>
+    <div class="nav-item" onclick="goto('hq-dash')"><span class="nav-icon">◈</span>Dashboard HQ</div>
+    <div class="nav-item" onclick="goto('hq-brands')"><span class="nav-icon">▤</span>Semua Brand</div>
+    <div class="nav-item" onclick="goto('hq-transfer')"><span class="nav-icon">⇄</span>Transfer Stok <span id="hq-tr-notif"></span></div>
+    <div class="nav-item" onclick="goto('hq-sdm')"><span class="nav-icon">◎</span>SDM Semua Brand</div>
+    <div class="nav-item" onclick="goto('hq-users')"><span class="nav-icon">👤</span>Kelola Akun</div>
+    <div class="nav-item" onclick="goto('hq-brand-add')"><span class="nav-icon">+</span>Tambah Brand</div>
+<div class="nav-item" onclick="goto('hq-company')">
+  <span class="nav-icon">🏢</span>Kelola Perusahaan
+</div>
+  </nav>
+  <nav class="nav-sec" id="nav-brand">
+    <div class="nav-lbl" id="nav-brand-lbl">Brand</div>
+    <div class="nav-item active" onclick="goto('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item" onclick="goto('stok-masuk')"><span class="nav-icon">↑</span>Stok Masuk</div>
+    <div class="nav-item" onclick="goto('stok')"><span class="nav-icon">▦</span>Stok & Inventori</div>
+    <div class="nav-item" onclick="goto('keluar')"><span class="nav-icon">↓</span>Stok Keluar Harian</div>
+    <div class="nav-item" onclick="goto('waste')"><span class="nav-icon">⚠</span>Waste Harian</div>
+    <div class="nav-item" onclick="goto('order-list')"><span class="nav-icon">📋</span>List Order & Rekomendasi</div>
+    <div class="nav-item" onclick="goto('estimasi')"><span class="nav-icon">◷</span>Estimasi Bertahan</div>
+    <div class="nav-item" onclick="goto('resep')"><span class="nav-icon">≡</span>Resep & Formula</div>
+    <div class="nav-item" onclick="goto('transfer')"><span class="nav-icon">⇄</span>Transfer Stok <span id="brand-tr-notif"></span></div>
+    <div class="nav-item" onclick="goto('sdm')"><span class="nav-icon">◎</span>SDM & KPI</div>
+    <div class="nav-item" onclick="goto('laporan')"><span class="nav-icon">≡</span>Laporan Harian</div>
+  </nav>
+  <div class="sf">
+    <div class="sf-user" id="sf-user">—</div>
+    <div class="sf-role" id="sf-role">—</div>
+    <div style="margin-top:.5rem"><button class="btn btn-sm btn-danger" onclick="doLogout()">Keluar</button></div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="topbar">
+  <div class="topbar-title" id="page-title">Dashboard</div>
+  <div class="flex-row">
+    <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace" id="clock"></span>
+    <button class="btn btn-accent" onclick="goto('stok-masuk')">↑ Stok Masuk</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="metrics">
+    <div class="metric m-d"><div class="metric-label">Stok Kritis</div><div class="metric-value" id="db-kritis">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Perlu Reorder</div><div class="metric-value" id="db-reorder">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Total Item</div><div class="metric-value" id="db-total">0</div></div>
+    <div class="metric m-a"><div class="metric-label">Waste Hari Ini</div><div class="metric-value" id="db-waste">0</div></div>
+    <div class="metric m-b"><div class="metric-label">Transfer Pending</div><div class="metric-value" id="db-tr-pending">0</div></div>
+  </div>
+  <div class="sec-title">Alert Stok</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Item</th><th>Kategori</th><th>Stok</th><th>Avg/Hari</th><th>Bertahan</th><th>Status</th></tr></thead><tbody id="db-alert-tbl"></tbody></table></div>
+  <div class="sec-title">Top Rekomendasi Order</div>
+  <div id="db-order-recs"></div>
+</div>
+
+<!-- STOK MASUK -->
+<div id="page-stok-masuk" class="page">
+  <div class="card" style="max-width:540px">
+    <div class="card-header"><span class="card-title">Input Stok Masuk</span></div>
+    <div style="padding:1rem">
+      <div class="form-grid">
+        <div class="ff"><label>Tanggal</label><input type="date" id="sm-tgl"/></div>
+        <div class="ff"><label>Kategori</label><select id="sm-cat" onchange="updateSmItems()"></select></div>
+        <div class="ff"><label>Item</label><select id="sm-item"></select></div>
+        <div class="ff"><label>Jumlah</label><input type="number" id="sm-qty" placeholder="0" min="0" step="0.01"/></div>
+        <div class="ff"><label>Satuan (otomatis)</label><input type="text" id="sm-satuan" readonly style="opacity:.5"/></div>
+        <div class="ff"><label>Supplier</label><input type="text" id="sm-sup" placeholder="Nama supplier"/></div>
+        <div class="ff" style="grid-column:1/-1"><label>Catatan</label><input type="text" id="sm-note" placeholder="Opsional"/></div>
+      </div>
+      <button class="btn btn-accent" onclick="submitStokMasuk()">✓ Simpan Stok Masuk</button>
+    </div>
+  </div>
+  <div class="sec-title">Riwayat Stok Masuk</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Supplier</th><th>Catatan</th></tr></thead><tbody id="tbl-masuk-log"></tbody></table></div>
+</div>
+
+<!-- STOK -->
+<div id="page-stok" class="page">
+  <div class="tabs" id="stok-tabs"></div>
+  <div id="stok-tab-contents"></div>
+</div>
+
+<!-- KELUAR -->
+<div id="page-keluar" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <div class="ff"><label>Tanggal</label><input type="date" id="k-tgl" style="width:150px"/></div>
+    <div class="ff"><label>Kategori</label><select id="k-cat" onchange="renderKeluarForm()" style="width:150px"></select></div>
+    <button class="btn btn-accent" onclick="submitKeluarBatch()" style="margin-top:17px">✓ Simpan Semua</button>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title" id="k-lbl">Stok Keluar</span><span style="font-size:10px;color:var(--text3)">Isi 0 jika tidak dipakai hari ini</span></div>
+    <div id="keluar-body"></div>
+  </div>
+  <div class="sec-title">Riwayat Keluar</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Alasan</th></tr></thead><tbody id="tbl-keluar-log"></tbody></table></div>
+</div>
+
+<!-- WASTE -->
+<div id="page-waste" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <div class="ff"><label>Tampilkan Tanggal</label><input type="date" id="w-view-tgl" style="width:155px" onchange="renderWastePage()"/></div>
+    <button class="btn btn-accent" onclick="openModal('modal-waste')">+ Catat Waste</button>
+  </div>
+  <div class="metrics">
+    <div class="metric m-d"><div class="metric-label">Waste Hari Ini</div><div class="metric-value" id="w-today">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Produksi Gagal</div><div class="metric-value" id="w-prod">0</div></div>
+    <div class="metric m-d"><div class="metric-label">Bahan Expired</div><div class="metric-value" id="w-exp">0</div></div>
+    <div class="metric m-b"><div class="metric-label">Kemasan Rusak</div><div class="metric-value" id="w-kem" style="color:var(--blue)">0</div></div>
+  </div>
+  <div class="card"><div id="waste-log-body" style="max-height:430px;overflow-y:auto"></div></div>
+</div>
+
+<!-- ORDER LIST & REKOMENDASI -->
+<div id="page-order-list" class="page">
+  <div class="card" style="max-width:700px;margin-bottom:1rem">
+    <div class="card-header"><span class="card-title">Parameter Perhitungan</span></div>
+    <div style="padding:1rem">
+      <div class="form-grid">
+        <div class="ff"><label>Rata-rata dari tanggal</label><input type="date" id="ol-avg-start" onchange="renderOrderList()"/></div>
+        <div class="ff"><label>Sampai tanggal</label><input type="date" id="ol-avg-end" onchange="renderOrderList()"/></div>
+        <div class="ff"><label>Lead Time (hari)</label><input type="number" id="ol-lead" value="14" min="1" onchange="renderOrderList()" style="width:100%"/></div>
+        <div class="ff"><label>Buffer Stock (hari)</label><input type="number" id="ol-buf" value="5" min="1" onchange="renderOrderList()" style="width:100%"/></div>
+        <div class="ff"><label>Filter Kategori</label><select id="ol-cat-filter" onchange="renderOrderList()"><option value="all">Semua</option></select></div>
+        <div class="ff"><label>Tampilkan</label><select id="ol-show-filter" onchange="renderOrderList()"><option value="all">Semua Item</option><option value="need">Perlu Order Saja</option></select></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:.3rem">Rumus: (avg keluar × lead time) + (avg keluar × buffer) − stok saat ini</div>
+    </div>
+  </div>
+  <div class="metrics">
+    <div class="metric m-d"><div class="metric-label">Perlu Diorder</div><div class="metric-value" id="ol-count">0</div></div>
+    <div class="metric"><div class="metric-label">Lead Time</div><div class="metric-value" id="ol-lead-disp" style="font-size:16px">14 hr</div></div>
+    <div class="metric"><div class="metric-label">Buffer</div><div class="metric-value" id="ol-buf-disp" style="font-size:16px">5 hr</div></div>
+    <div class="metric m-a"><div class="metric-label">Rentang Avg</div><div class="metric-value" id="ol-range-disp" style="font-size:14px">—</div></div>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <div class="card-header">
+      <span class="card-title">Rekomendasi Order & Estimasi</span>
+      <div class="flex-row" style="gap:5px">
+        <button class="btn btn-sm" onclick="openModal('modal-order-catat')">+ Catat Order</button>
+      </div>
+    </div>
+    <table class="tbl" id="tbl-order-list">
+      <thead><tr><th>Item</th><th>Kategori</th><th>Stok</th><th>Avg Keluar/Hari</th><th>Dasar Hitung</th><th>Qty Order</th><th>Stok Setelah</th><th>Est. Bertahan</th><th>Status</th></tr></thead>
+      <tbody id="tbl-order-list-body"></tbody>
+    </table>
+  </div>
+  <div class="sec-title">Log Order Tercatat</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tgl Order</th><th>Item</th><th>Qty</th><th>Supplier</th><th>Est. Tiba</th><th>Status</th><th></th></tr></thead><tbody id="tbl-order-log"></tbody></table></div>
+</div>
+
+<!-- ESTIMASI -->
+<div id="page-estimasi" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <div class="ff"><label>Dari Tanggal</label><input type="date" id="est-s" style="width:148px" onchange="renderEstimasi()"/></div>
+    <div class="ff"><label>Sampai Tanggal</label><input type="date" id="est-e" style="width:148px" onchange="renderEstimasi()"/></div>
+    <div class="ff"><label>Avg Keluar Dari</label><input type="date" id="est-avg-s" style="width:148px" onchange="renderEstimasi()"/></div>
+    <div class="ff"><label>Avg Keluar Sampai</label><input type="date" id="est-avg-e" style="width:148px" onchange="renderEstimasi()"/></div>
+    <div class="ff"><label>Kategori</label><select id="est-cat" style="width:140px" onchange="renderEstimasi()"><option value="all">Semua</option></select></div>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Rentang Estimasi</div><div class="metric-value" id="est-days" style="font-size:18px">0 hr</div></div>
+    <div class="metric m-d"><div class="metric-label">Habis Sebelum Target</div><div class="metric-value" id="est-habis">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Hampir Habis</div><div class="metric-value" id="est-hampir">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Aman</div><div class="metric-value" id="est-aman">0</div></div>
+  </div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Item</th><th>Kategori</th><th>Stok</th><th>Avg/Hari</th><th>Butuh</th><th>Sisa Est.</th><th>Bertahan</th><th>Status</th></tr></thead><tbody id="tbl-est"></tbody></table></div>
+</div>
+
+<!-- RESEP & FORMULA -->
+<div id="page-resep" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <button class="btn btn-accent" onclick="openModal('modal-resep-add')">+ Tambah Resep</button>
+  </div>
+  <div id="resep-container"></div>
+  <div class="sec-title">Kalkulator Kebutuhan Bahan</div>
+  <div class="card" style="max-width:600px">
+    <div class="card-header"><span class="card-title">Hitung Kebutuhan Bahan dari Resep</span></div>
+    <div style="padding:1rem">
+      <div class="form-grid">
+        <div class="ff"><label>Pilih Resep</label><select id="kal-resep" onchange="renderKalkulator()"></select></div>
+        <div class="ff"><label>Jumlah Porsi / Batch</label><input type="number" id="kal-porsi" value="100" min="1" onchange="renderKalkulator()"/></div>
+      </div>
+      <div id="kal-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSFER -->
+<div id="page-transfer" class="page">
+  <div class="metrics">
+    <div class="metric m-w"><div class="metric-label">Request Masuk</div><div class="metric-value" id="tr-masuk">0</div><div class="metric-sub">menunggu approve</div></div>
+    <div class="metric m-b"><div class="metric-label">Request Keluar</div><div class="metric-value" id="tr-keluar">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Selesai</div><div class="metric-value" id="tr-done">0</div></div>
+  </div>
+  <button class="btn btn-accent" style="margin-bottom:1rem" onclick="openTransferReq()">+ Request Transfer dari Brand Lain</button>
+  <div class="sec-title">Request Masuk (Brand ini diminta memberi stok)</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Dari Brand</th><th>Item</th><th>Qty</th><th>Alasan</th><th>Tgl</th><th>Aksi</th></tr></thead><tbody id="tbl-tr-incoming"></tbody></table></div>
+  <div class="sec-title">Riwayat Transfer</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tgl</th><th>Dari</th><th>Ke</th><th>Item</th><th>Qty</th><th>Status</th></tr></thead><tbody id="tbl-tr-history"></tbody></table></div>
+</div>
+
+<!-- SDM & KPI -->
+<div id="page-sdm" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <button class="btn btn-accent" onclick="openModal('modal-sdm-add')">+ Tambah Karyawan</button>
+    <button class="btn" onclick="openModal('modal-posisi-mgr')">⚙ Kelola Posisi & Target</button>
+    <button class="btn" onclick="openModal('modal-shift-mgr')">⚙ Kelola Shift</button>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total Tim</div><div class="metric-value" id="sdm-total">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Di Atas Target</div><div class="metric-value" id="sdm-above">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Di Bawah Target</div><div class="metric-value" id="sdm-below">0</div></div>
+    <div class="metric m-a"><div class="metric-label">Avg KPI</div><div class="metric-value" id="sdm-avg-kpi">0%</div></div>
+  </div>
+  <div class="sec-title">Distribusi Shift</div>
+  <div id="sdm-shift-dist" class="flex-row" style="margin-bottom:1rem;gap:8px"></div>
+  <div id="sdm-kpi-list"></div>
+</div>
+
+<!-- HQ DASHBOARD -->
+<div id="page-hq-dash" class="page">
+  <div class="metrics">
+    <div class="metric m-d"><div class="metric-label">Total Kritis</div><div class="metric-value" id="hq-kritis">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Perlu Reorder</div><div class="metric-value" id="hq-reorder">0</div></div>
+    <div class="metric m-a"><div class="metric-label">Total Brand</div><div class="metric-value" id="hq-brands">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Transfer Pending</div><div class="metric-value" id="hq-tr-pend">0</div></div>
+    <div class="metric m-d"><div class="metric-label">Waste Hari Ini</div><div class="metric-value" id="hq-waste">0</div></div>
+  </div>
+  <div class="brand-overview-grid" id="hq-brand-grid"></div>
+  <div class="sec-title">Stok Kritis Lintas Brand</div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Brand</th><th>Item</th><th>Kategori</th><th>Stok</th><th>Bertahan</th><th>Status</th></tr></thead><tbody id="hq-alert-tbl"></tbody></table></div>
+</div>
+
+<!-- HQ BRANDS -->
+<div id="page-hq-brands" class="page">
+  <div class="flex-row" style="margin-bottom:1rem" id="hq-brand-chips"></div>
+  <div id="hq-brand-detail"></div>
+</div>
+
+<!-- HQ TRANSFER -->
+<div id="page-hq-transfer" class="page">
+  <div class="metrics">
+    <div class="metric m-w"><div class="metric-label">Pending</div><div class="metric-value" id="hqt-pend">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Approved</div><div class="metric-value" id="hqt-app">0</div></div>
+    <div class="metric m-d"><div class="metric-label">Rejected</div><div class="metric-value" id="hqt-rej">0</div></div>
+  </div>
+  <button class="btn btn-accent" style="margin-bottom:1rem" onclick="openModal('modal-tr-hq')">+ Buat Transfer (Admin)</button>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tgl</th><th>Requester</th><th>Dari</th><th>Ke</th><th>Item</th><th>Qty</th><th>Alasan</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="hqt-tbl"></tbody></table></div>
+</div>
+
+<!-- HQ SDM -->
+<div id="page-hq-sdm" class="page">
+  <div class="sec-title">Filter Brand</div>
+  <div class="flex-row" style="margin-bottom:1rem" id="hq-sdm-chips"></div>
+  <div id="hq-sdm-detail"></div>
+</div>
+
+<!-- HQ USERS -->
+<div id="page-hq-users" class="page">
+  <button class="btn btn-accent" style="margin-bottom:1rem" onclick="openModal('modal-add-user')">+ Tambah Akun</button>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Brand</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbl-users"></tbody></table></div>
+</div>
+
+<!-- HQ BRAND ADD -->
+<div id="page-hq-brand-add" class="page">
+  <div class="card" style="max-width:480px">
+    <div class="card-header"><span class="card-title">Tambah Brand Baru</span></div>
+    <div style="padding:1rem">
+      <div class="form-grid">
+        <div class="ff" style="grid-column:1/-1"><label>Nama Brand</label><input type="text" id="nb-nama" placeholder="contoh: Brand F"/></div>
+        <div class="ff"><label>Warna</label><input type="color" id="nb-color" value="#e8c547" style="height:34px;padding:2px 4px"/></div>
+        <div class="ff"><label>PIC (User)</label><select id="nb-pic"><option value="">Pilih user...</option></select></div>
+      </div>
+      <button class="btn btn-accent" onclick="submitNewBrand()">Buat Brand</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAPORAN -->
+<div id="page-laporan" class="page">
+  <div class="flex-row" style="margin-bottom:1rem">
+    <div class="ff"><label>Tanggal</label><input type="date" id="lap-tgl" style="width:155px" onchange="renderLaporan()"/></div>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Keluar</div><div class="metric-value" id="lap-k">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Masuk</div><div class="metric-value" id="lap-m">0</div></div>
+    <div class="metric m-d"><div class="metric-label">Waste</div><div class="metric-value" id="lap-w">0</div></div>
+    <div class="metric m-b"><div class="metric-label">Transfer</div><div class="metric-value" id="lap-t">0</div></div>
+  </div>
+  <div class="card"><div id="lap-body" style="max-height:480px;overflow-y:auto"></div></div>
+</div>
+<!-- HQ COMPANY -->
+<div id="page-hq-company" class="page">
+  <div class="card" style="max-width:500px">
+    <div class="card-header">
+      <span class="card-title">Kelola Perusahaan</span>
+    </div>
+
+    <div style="padding:1rem">
+
+      <div class="form-grid">
+
+        <div class="ff" style="grid-column:1/-1">
+          <label>Nama Perusahaan</label>
+          <input type="text" id="comp-name"/>
+        </div>
+
+        <div class="ff">
+          <label>Pilih Brand</label>
+          <select id="comp-brand-select"></select>
+        </div>
+
+        <div class="ff">
+          <label>Nama Brand Baru</label>
+          <input type="text" id="comp-brand-name"/>
+        </div>
+
+        <div class="ff" style="grid-column:1/-1">
+          <label>Logo Perusahaan</label>
+          <input type="file" id="comp-logo" accept="image/*"/>
+        </div>
+
+      </div>
+
+      <div class="flex-row" style="margin-top:1rem">
+        <button class="btn btn-accent" onclick="saveCompany()">Simpan Perubahan</button>
+      </div>
+
+      <div style="margin-top:1rem">
+        <img id="comp-logo-preview" style="max-height:80px"/>
+      </div>
+
+    </div>
+  </div>
+</div>
+</main>
+</div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+<!-- WASTE -->
+<div class="modal-overlay" id="modal-waste"><div class="modal">
+  <div class="modal-title">Catat Waste</div>
+  <div class="form-grid">
+    <div class="ff"><label>Jenis</label><select id="wa-jenis"><option value="Produksi Gagal">Sisa Produksi/Gagal</option><option value="Bahan Expired">Bahan Expired</option><option value="Kemasan Rusak">Kemasan Rusak</option></select></div>
+    <div class="ff"><label>Tanggal</label><input type="date" id="wa-tgl"/></div>
+    <div class="ff"><label>Item</label><input type="text" id="wa-item" placeholder="Nama item"/></div>
+    <div class="ff"><label>Jumlah</label><input type="number" id="wa-qty" placeholder="0" step="0.01"/></div>
+    <div class="ff"><label>Satuan</label><select id="wa-sat"><option>kg</option><option>gram</option><option>pcs</option><option>pack</option><option>liter</option><option>ml</option></select></div>
+    <div class="ff" style="grid-column:1/-1"><label>Penyebab</label><input type="text" id="wa-sebab" placeholder="Jelaskan penyebab"/></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-waste')">Batal</button>
+    <button class="btn btn-accent" onclick="submitWaste()">Catat</button>
+  </div>
+</div></div>
+
+<!-- ORDER CATAT -->
+<div class="modal-overlay" id="modal-order-catat"><div class="modal">
+  <div class="modal-title">Catat Order</div>
+  <div class="form-grid">
+    <div class="ff"><label>Item</label><input type="text" id="oc-item" placeholder="Nama item"/></div>
+    <div class="ff"><label>Qty</label><input type="number" id="oc-qty" placeholder="0"/></div>
+    <div class="ff"><label>Satuan</label><select id="oc-sat"><option>kg</option><option>gram</option><option>pcs</option><option>pack</option><option>liter</option></select></div>
+    <div class="ff"><label>Supplier</label><input type="text" id="oc-sup" placeholder="Nama supplier"/></div>
+    <div class="ff"><label>Tanggal Order</label><input type="date" id="oc-tgl"/></div>
+    <div class="ff"><label>Lead Time (hari)</label><input type="number" id="oc-lead" placeholder="14" min="1"/></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-order-catat')">Batal</button>
+    <button class="btn btn-accent" onclick="submitOrderCatat()">Catat</button>
+  </div>
+</div></div>
+
+<!-- RESEP ADD -->
+<div class="modal-overlay" id="modal-resep-add"><div class="modal">
+  <div class="modal-title" id="resep-modal-title">Tambah Resep</div>
+  <input type="hidden" id="resep-edit-idx" value="-1"/>
+  <div class="form-grid">
+    <div class="ff" style="grid-column:1/-1"><label>Nama Produk / Resep</label><input type="text" id="r-nama" placeholder="contoh: Mac Keju Spesial"/></div>
+    <div class="ff"><label>Yield / Porsi per Batch</label><input type="number" id="r-porsi" placeholder="1" min="1"/></div>
+    <div class="ff"><label>Satuan Yield</label><input type="text" id="r-satuan-yield" placeholder="pcs / cup / bungkus"/></div>
+    <div class="ff" style="grid-column:1/-1"><label>Catatan Proses</label><input type="text" id="r-catatan" placeholder="Instruksi singkat proses"/></div>
+  </div>
+  <div class="sec-title" style="margin-top:0">Bahan-bahan (satu baris = satu bahan)</div>
+  <div style="font-size:10px;color:var(--text3);margin-bottom:.5rem">Format: Nama Bahan | Qty | Satuan (contoh: Macaroni Mateng | 200 | gram)</div>
+  <textarea id="r-bahan" rows="8" style="background:var(--bg3);border:.5px solid var(--border2);border-radius:var(--r);padding:8px;color:var(--text);font-size:11.5px;font-family:'DM Mono',monospace;resize:vertical;width:100%;outline:none" placeholder="Macaroni Mateng | 200 | gram&#10;Saus Keju | 30 | ml&#10;Bumbu Tabur Keju | 5 | gram"></textarea>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px;margin-top:1rem">
+    <button class="btn" onclick="closeModal('modal-resep-add')">Batal</button>
+    <button class="btn btn-accent" onclick="submitResep()">Simpan Resep</button>
+  </div>
+</div></div>
+
+<!-- TRANSFER REQUEST (BRAND) -->
+<div class="modal-overlay" id="modal-tr-req"><div class="modal">
+  <div class="modal-title">Request Transfer Stok dari Brand Lain</div>
+  <div style="font-size:11px;color:var(--text3);margin-bottom:1rem">Stok akan diambil dari brand sumber setelah disetujui.</div>
+  <div class="form-grid">
+    <div class="ff"><label>Ambil dari Brand</label><select id="tr-from"></select></div>
+    <div class="ff"><label>Dipindahkan ke Brand</label><select id="tr-to-brand" disabled style="opacity:.6"></select></div>
+    <div class="ff"><label>Nama Item</label><input type="text" id="tr-item" placeholder="Nama item"/></div>
+    <div class="ff"><label>Jumlah</label><input type="number" id="tr-qty" placeholder="0" step="0.01"/></div>
+    <div class="ff"><label>Satuan</label><select id="tr-sat"><option>kg</option><option>gram</option><option>pcs</option><option>pack</option><option>liter</option></select></div>
+    <div class="ff" style="grid-column:1/-1"><label>Alasan</label><input type="text" id="tr-alasan" placeholder="Jelaskan alasan transfer"/></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-tr-req')">Batal</button>
+    <button class="btn btn-accent" onclick="submitTransferReq()">Kirim Request</button>
+  </div>
+</div></div>
+
+<!-- TRANSFER HQ -->
+<div class="modal-overlay" id="modal-tr-hq"><div class="modal">
+  <div class="modal-title">Buat Transfer (Admin)</div>
+  <div class="form-grid">
+    <div class="ff"><label>Dari Brand</label><select id="hqt-from"></select></div>
+    <div class="ff"><label>Ke Brand</label><select id="hqt-to"></select></div>
+    <div class="ff"><label>Nama Item</label><input type="text" id="hqt-item" placeholder="Nama item"/></div>
+    <div class="ff"><label>Jumlah</label><input type="number" id="hqt-qty" placeholder="0" step="0.01"/></div>
+    <div class="ff"><label>Satuan</label><select id="hqt-sat"><option>kg</option><option>gram</option><option>pcs</option><option>pack</option><option>liter</option></select></div>
+    <div class="ff" style="grid-column:1/-1"><label>Catatan</label><input type="text" id="hqt-note" placeholder="Opsional"/></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-tr-hq')">Batal</button>
+    <button class="btn btn-accent" onclick="submitTransferHQ()">Proses Transfer</button>
+  </div>
+</div></div>
+
+<!-- SDM ADD -->
+<div class="modal-overlay" id="modal-sdm-add"><div class="modal">
+  <div class="modal-title">Tambah / Update Karyawan</div>
+  <div class="form-grid">
+    <div class="ff" style="grid-column:1/-1"><label>Nama Karyawan</label><input type="text" id="sdm-nama" placeholder="Nama lengkap"/></div>
+    <div class="ff"><label>Posisi</label><select id="sdm-posisi"></select></div>
+    <div class="ff"><label>Shift</label><select id="sdm-shift"></select></div>
+    <div class="ff"><label>Target (dari posisi)</label><input type="text" id="sdm-target-preview" readonly style="opacity:.6"/></div>
+    <div class="ff"><label>Hasil Kerja Hari Ini</label><input type="number" id="sdm-aktual" placeholder="0" min="0" step="0.01"/></div>
+    <div class="ff"><label>Satuan Hasil</label><input type="text" id="sdm-satuan-hasil" placeholder="contoh: porsi, kg, pcs"/></div>
+    <div class="ff" style="grid-column:1/-1"><label>Catatan</label><input type="text" id="sdm-note" placeholder="Opsional"/></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-sdm-add')">Batal</button>
+    <button class="btn btn-accent" onclick="submitSDM()">Simpan</button>
+  </div>
+</div></div>
+
+<!-- POSISI MANAGER -->
+<div class="modal-overlay" id="modal-posisi-mgr"><div class="modal">
+  <div class="modal-title">Kelola Posisi & Target KPI</div>
+  <div class="form-grid">
+    <div class="ff"><label>Nama Posisi</label><input type="text" id="pos-nama" placeholder="contoh: Operator Produksi"/></div>
+    <div class="ff"><label>Target per Hari</label><input type="number" id="pos-target" placeholder="50" min="0"/></div>
+    <div class="ff"><label>Satuan Target</label><input type="text" id="pos-satuan" placeholder="contoh: porsi, kg"/></div>
+  </div>
+  <button class="btn btn-accent" onclick="submitPosisi()">+ Tambah Posisi</button>
+  <div class="sec-title">Daftar Posisi</div>
+  <div class="card"><table class="tbl"><thead><tr><th>Posisi</th><th>Target/Hari</th><th>Satuan</th><th>Aksi</th></tr></thead><tbody id="tbl-posisi"></tbody></table></div>
+  <div class="flex-row" style="justify-content:flex-end;margin-top:.5rem"><button class="btn" onclick="closeModal('modal-posisi-mgr')">Tutup</button></div>
+</div></div>
+
+<!-- SHIFT MANAGER -->
+<div class="modal-overlay" id="modal-shift-mgr"><div class="modal">
+  <div class="modal-title">Kelola Shift</div>
+  <div class="form-grid">
+    <div class="ff"><label>Nama Shift</label><input type="text" id="shift-nama" placeholder="contoh: Pagi"/></div>
+    <div class="ff"><label>Jam Mulai</label><input type="time" id="shift-start"/></div>
+    <div class="ff"><label>Jam Selesai</label><input type="time" id="shift-end"/></div>
+  </div>
+  <button class="btn btn-accent" onclick="submitShift()">+ Tambah Shift</button>
+  <div class="sec-title">Daftar Shift</div>
+  <div class="card"><table class="tbl"><thead><tr><th>Shift</th><th>Jam</th><th>Aksi</th></tr></thead><tbody id="tbl-shift"></tbody></table></div>
+  <div class="flex-row" style="justify-content:flex-end;margin-top:.5rem"><button class="btn" onclick="closeModal('modal-shift-mgr')">Tutup</button></div>
+</div></div>
+
+<!-- ADD USER -->
+<div class="modal-overlay" id="modal-add-user"><div class="modal">
+  <div class="modal-title">Tambah Akun</div>
+  <div class="form-grid">
+    <div class="ff"><label>Username</label><input type="text" id="nu-user"/></div>
+    <div class="ff"><label>Password</label><input type="password" id="nu-pass"/></div>
+    <div class="ff"><label>Nama Lengkap</label><input type="text" id="nu-nama"/></div>
+    <div class="ff"><label>Role</label><select id="nu-role" onchange="toggleNuBrand()"><option value="pic">PIC Brand</option><option value="admin">Admin HQ</option></select></div>
+    <div class="ff" id="nu-brand-wrap"><label>Brand</label><select id="nu-brand"></select></div>
+  </div>
+  <div class="flex-row" style="justify-content:flex-end;gap:7px">
+    <button class="btn" onclick="closeModal('modal-add-user')">Batal</button>
+    <button class="btn btn-accent" onclick="submitAddUser()">Tambah</button>
+  </div>
+</div></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// GLOBAL DATA
+// ═══════════════════════════════════════════════════
+const CATS = ['Bahan Baku','Saus','Bumbu','Kemasan','Perlengkapan'];
+let DB = {company:{
+  name:'PT ABC',
+  logo:''
+},
+  brands: {
+    brandA:{name:'Brand A',color:'#e8c547',items:{'Bahan Baku':[{nama:'Macaroni Mateng',satuan:'kg',stok:15,min:5,paiManual:0},{nama:'Macaroni Mentah',satuan:'kg',stok:20,min:8,paiManual:0},{nama:'Mie Lidi',satuan:'kg',stok:8,min:5,paiManual:0},{nama:'Pilus',satuan:'kg',stok:3,min:4,paiManual:0},{nama:'Mie Kremes',satuan:'kg',stok:10,min:5,paiManual:0},{nama:'Basreng',satuan:'kg',stok:6,min:4,paiManual:0},{nama:'Minyak Goreng',satuan:'liter',stok:12,min:10,paiManual:0},{nama:'Tempe',satuan:'kg',stok:2,min:3,paiManual:0},{nama:'Usus',satuan:'kg',stok:5,min:3,paiManual:0},{nama:'Mie Gulung',satuan:'kg',stok:7,min:4,paiManual:0}],'Saus':[{nama:'Saus Keju',satuan:'kg',stok:3,min:2,paiManual:0},{nama:'Saus Pedas Lv 5',satuan:'kg',stok:2.5,min:2,paiManual:0},{nama:'Saus BBQ',satuan:'kg',stok:1.5,min:2,paiManual:0},{nama:'Saus Bolognese',satuan:'kg',stok:2,min:1.5,paiManual:0},{nama:'Chili Oil',satuan:'liter',stok:1,min:1,paiManual:0}],'Bumbu':[{nama:'Original Bumbu Tabur',satuan:'kg',stok:2,min:1,paiManual:0},{nama:'Bumbu Tabur Keju',satuan:'kg',stok:1.5,min:1,paiManual:0},{nama:'Bumbu Tabur Jagung Manis',satuan:'kg',stok:1.8,min:1,paiManual:0},{nama:'Bumbu Tabur Pedas Lv 5',satuan:'kg',stok:2,min:1,paiManual:0},{nama:'Bumbu Tabur Pedas Daun Jeruk',satuan:'kg',stok:0.5,min:1,paiManual:0},{nama:'Bumbu Tabur Rendang',satuan:'kg',stok:1,min:0.8,paiManual:0},{nama:'Ayam Bawang',satuan:'kg',stok:1,min:0.8,paiManual:0},{nama:'BBQ Balado',satuan:'kg',stok:0.6,min:0.8,paiManual:0},{nama:'Super Pedas Lv 15',satuan:'kg',stok:0.4,min:0.5,paiManual:0}],'Kemasan':[{nama:'Food Pail',satuan:'pcs',stok:200,min:100,paiManual:0},{nama:'Plastik Sablon Besar',satuan:'pack',stok:5,min:3,paiManual:0},{nama:'Plastik Saus 1/2 Kg',satuan:'pack',stok:8,min:5,paiManual:0},{nama:'Plastik Sablon Kecil',satuan:'pack',stok:4,min:3,paiManual:0}],'Perlengkapan':[{nama:'Timbangan Digital',satuan:'pcs',stok:2,min:1,paiManual:0},{nama:'Kardus Packing',satuan:'pcs',stok:50,min:30,paiManual:0},{nama:'Lakban Cokelat',satuan:'roll',stok:4,min:3,paiManual:0},{nama:'Kertas Label',satuan:'pack',stok:3,min:2,paiManual:0}]}},
+    brandB:{name:'Brand B',color:'#6abf7b',items:{'Bahan Baku':[{nama:'Macaroni Mateng',satuan:'kg',stok:10,min:5,paiManual:0},{nama:'Tepung Bumbu',satuan:'kg',stok:8,min:4,paiManual:0},{nama:'Telur',satuan:'pcs',stok:120,min:60,paiManual:0}],'Saus':[{nama:'Saus Sambal',satuan:'kg',stok:2,min:1.5,paiManual:0}],'Bumbu':[{nama:'Bumbu Tabur Original',satuan:'kg',stok:1,min:0.8,paiManual:0}],'Kemasan':[{nama:'Box Kemasan B',satuan:'pcs',stok:100,min:50,paiManual:0}],'Perlengkapan':[{nama:'Kompor Portable',satuan:'pcs',stok:2,min:1,paiManual:0}]}},
+    brandC:{name:'Brand C',color:'#5b9bd5',items:{'Bahan Baku':[{nama:'Kentang',satuan:'kg',stok:20,min:8,paiManual:0},{nama:'Minyak Goreng',satuan:'liter',stok:8,min:5,paiManual:0}],'Saus':[{nama:'Saus Mayo',satuan:'kg',stok:1.5,min:1,paiManual:0}],'Bumbu':[{nama:'Garam',satuan:'kg',stok:2,min:1,paiManual:0}],'Kemasan':[{nama:'Kantong Kraft',satuan:'pcs',stok:200,min:100,paiManual:0}],'Perlengkapan':[{nama:'Wajan Goreng',satuan:'pcs',stok:3,min:2,paiManual:0}]}},
+    brandD:{name:'Brand D',color:'#e8924a',items:{'Bahan Baku':[{nama:'Ayam Fillet',satuan:'kg',stok:15,min:6,paiManual:0}],'Saus':[{nama:'Saus Teriyaki',satuan:'kg',stok:2,min:1,paiManual:0}],'Bumbu':[{nama:'Bumbu Marinade',satuan:'kg',stok:1,min:0.5,paiManual:0}],'Kemasan':[{nama:'Wrap Foil',satuan:'pcs',stok:150,min:80,paiManual:0}],'Perlengkapan':[{nama:'Grill Pan',satuan:'pcs',stok:2,min:1,paiManual:0}]}},
+    brandE:{name:'Brand E',color:'#9b7fd4',items:{'Bahan Baku':[{nama:'Singkong',satuan:'kg',stok:30,min:10,paiManual:0}],'Saus':[{nama:'Saus Kacang',satuan:'kg',stok:2,min:1,paiManual:0}],'Bumbu':[{nama:'Bumbu Pedas Spesial',satuan:'kg',stok:1,min:0.5,paiManual:0}],'Kemasan':[{nama:'Cup Plastik',satuan:'pcs',stok:300,min:150,paiManual:0}],'Perlengkapan':[{nama:'Parutan Manual',satuan:'pcs',stok:4,min:2,paiManual:0}]}},
+  },
+  keluarLog:{},masukLog:{},wasteLog:{},orderLog:{},
+  transferLog:[],
+  resep:{},  // resep[brandId] = [{nama,porsi,satuanYield,catatan,bahan:[{nama,qty,satuan}]}]
+  sdm:{},    // sdm[brandId] = [{nama,posisi,shift,aktual,satuanHasil,note,tgl}]
+  posisi:{}, // posisi[brandId] = [{nama,target,satuan}]
+  shifts:{}, // shifts[brandId] = [{nama,start,end}]
+  users:[
+    {username:'admin',password:'admin123',nama:'Admin PT ABC',role:'admin',brand:null,active:true},
+    {username:'picA',password:'picA123',nama:'PIC Brand A',role:'pic',brand:'brandA',active:true},
+    {username:'picB',password:'picB123',nama:'PIC Brand B',role:'pic',brand:'brandB',active:true},
+    {username:'picC',password:'picC123',nama:'PIC Brand C',role:'pic',brand:'brandC',active:true},
+    {username:'picD',password:'picD123',nama:'PIC Brand D',role:'pic',brand:'brandD',active:true},
+    {username:'picE',password:'picE123',nama:'PIC Brand E',role:'pic',brand:'brandE',active:true},
+  ],
+};
+Object.keys(DB.brands).forEach(bid=>{
+  DB.keluarLog[bid]=[];DB.masukLog[bid]=[];DB.wasteLog[bid]=[];DB.orderLog[bid]=[];
+  DB.resep[bid]=[];DB.sdm[bid]=[];
+  DB.posisi[bid]=[{nama:'Operator Produksi',target:50,satuan:'porsi'},{nama:'Supervisor',target:60,satuan:'porsi'},{nama:'QC',target:40,satuan:'pcs'},{nama:'Gudang',target:30,satuan:'item'},{nama:'Kasir/Admin',target:1,satuan:'laporan'}];
+  DB.shifts[bid]=[{nama:'Pagi',start:'06:00',end:'14:00'},{nama:'Sore',start:'14:00',end:'22:00'},{nama:'Malam',start:'22:00',end:'06:00'}];
+});
+
+let SESSION={user:null,brandId:null};
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+function fmtD(s){if(!s)return'-';return new Date(s+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+function addD(s,n){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function R(n,d=2){return isFinite(n)&&n!==null?parseFloat(n.toFixed(d)):0;}
+function bItems(bid){return DB.brands[bid]?.items||{};}
+function allFlat(bid){return Object.entries(bItems(bid)).flatMap(([cat,items])=>items.map(i=>({...i,cat})));}
+
+// avg keluar dalam rentang tanggal
+function avgKeluar(bid,cat,nama,startStr,endStr){
+  let logs=DB.keluarLog[bid]||[];
+  logs=logs.filter(l=>l.cat===cat&&l.nama===nama);
+  if(startStr)logs=logs.filter(l=>l.tgl>=startStr);
+  if(endStr)logs=logs.filter(l=>l.tgl<=endStr);
+  if(!logs.length){const it=bItems(bid)[cat]?.find(i=>i.nama===nama);return it?.paiManual||0;}
+  const byDate={};
+  logs.forEach(l=>{byDate[l.tgl]=(byDate[l.tgl]||0)+l.qty;});
+  const vals=Object.values(byDate);
+  return R(vals.reduce((s,v)=>s+v,0)/vals.length);
+}
+function avgKeluar7(bid,cat,nama){
+  const e=today();const s=addD(e,-7);
+  return avgKeluar(bid,cat,nama,s,e);
+}
+function bertahan(bid,cat,nama,avgS,avgE){
+  const it=bItems(bid)[cat]?.find(i=>i.nama===nama);if(!it)return 0;
+  const avg=avgKeluar(bid,cat,nama,avgS,avgE);
+  if(avg<=0)return Infinity;return it.stok/avg;
+}
+function statusItem(bid,cat,nama){
+  const it=bItems(bid)[cat]?.find(i=>i.nama===nama);if(!it)return['—','b-gray'];
+  if(it.stok<=0)return['Habis','b-danger'];
+  const h=bertahan(bid,cat,nama,addD(today(),-7),today());
+  if(h<3)return['Kritis','b-danger'];
+  if(it.stok<it.min||h<7)return['Segera Order','b-warn'];
+  return['Aman','b-ok'];
+}
+function bCol(h){return h<3?'var(--red)':h<7?'var(--orange)':'var(--green)';}
+
+// ═══════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════
+setInterval(()=>{const n=new Date();$('clock').textContent=n.toLocaleDateString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+' '+n.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+function doLogin(){
+  const u=$('l-user').value.trim(),p=$('l-pass').value;
+  const user=DB.users.find(x=>x.username===u&&x.password===p&&x.active);
+  if(!user){$('l-err').style.display='block';return;}
+  $('l-err').style.display='none';
+  SESSION.user=user;
+  SESSION.brandId=user.role==='admin'?Object.keys(DB.brands)[0]:user.brand;
+  $('login-screen').style.display='none';$('app-screen').style.display='flex';
+  initApp();
+}
+function doLogout(){
+  SESSION={user:null,brandId:null};
+  $('login-screen').style.display='flex';
+  $('app-screen').style.display='none';
+  $('l-user').value='';
+  $('l-pass').value='';
+}
+$('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+$('l-user').addEventListener('keydown',e=>{if(e.key==='Enter')$('l-pass').focus();});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function initApp(){
+  const u=SESSION.user;
+  $('sf-user').textContent=u.nama;
+$('comp-name-label').textContent = DB.company.name;
+if(DB.company.logo){
+  $('comp-logo-img').src = DB.company.logo;
+}
+  $('sf-role').textContent=u.role==='admin'?'Admin PT ABC':'PIC — '+DB.brands[u.brand]?.name;
+  $('nav-admin').style.display=u.role==='admin'?'block':'none';
+  $('nav-brand').style.display='block';
+  refreshSidebar();
+  // init dates
+  const t=today(),e14=addD(t,14),s7=addD(t,-7);
+  ['sm-tgl','wa-tgl','oc-tgl','lap-tgl'].forEach(id=>{const el=$(id);if(el)el.value=t;});
+  ['k-tgl','w-view-tgl'].forEach(id=>{const el=$(id);if(el)el.value=t;});
+  if($('ol-avg-start'))$('ol-avg-start').value=s7;
+  if($('ol-avg-end'))$('ol-avg-end').value=t;
+  if($('est-s'))$('est-s').value=t;
+  if($('est-e'))$('est-e').value=e14;
+  if($('est-avg-s'))$('est-avg-s').value=s7;
+  if($('est-avg-e'))$('est-avg-e').value=t;
+  populateBrandDropdowns();
+  buildStokTabs();
+  buildCatDropdowns();
+  if(u.role==='admin')goto('hq-dash');else goto('dashboard');
+}
+function refreshSidebar(){
+  const bid=SESSION.brandId;
+  $('sb-brand').textContent=DB.brands[bid]?.name||'PT ABC';
+  $('sb-role-lbl').textContent=SESSION.user.role==='admin'?'Admin HQ':'PIC Brand';
+  $('nav-brand-lbl').textContent=DB.brands[bid]?.name||'Brand';
+}
+
+// ═══════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════
+const PAGE_TITLES={'dashboard':'Dashboard','stok-masuk':'Stok Masuk','stok':'Stok & Inventori','keluar':'Input Stok Keluar Harian','waste':'Waste Harian','order-list':'List Order & Rekomendasi','estimasi':'Estimasi Bertahan','resep':'Resep & Formula','transfer':'Transfer Stok','sdm':'SDM & KPI','laporan':'Laporan Harian','hq-dash':'Dashboard HQ','hq-brands':'Stok Semua Brand','hq-transfer':'Kelola Transfer','hq-sdm':'SDM Semua Brand','hq-users':'Kelola Akun','hq-brand-add':'Tambah Brand Baru'};
+function goto(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=$('page-'+id);if(pg)pg.classList.add('active');
+function goto(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+
+  // 🔥 TAMBAHAN
+  if(id === 'hq-company'){
+    loadCompanyPage();
+  }
+}
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')===`goto('${id}')`)n.classList.add('active');});
+  $('page-title').textContent=PAGE_TITLES[id]||id;
+  const map={dashboard:renderDashboard,'stok-masuk':renderStokMasukPage,stok:renderStokPage,keluar:renderKeluar,waste:renderWastePage,['order-list']:renderOrderList,estimasi:renderEstimasi,resep:renderResep,transfer:renderTransfer,sdm:renderSDM,laporan:renderLaporan,'hq-dash':renderHQDash,'hq-brands':renderHQBrands,'hq-transfer':renderHQTransfer,'hq-sdm':renderHQSDM,'hq-users':renderUsers,'hq-brand-add':initBrandAdd};
+  if(map[id])map[id]();
+  updateNotifs();
+}
+function switchTab(el,g,tid){const pg=$('page-'+g);if(!pg)return;pg.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));pg.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));el.classList.add('active');const tc=$(tid);if(tc)tc.classList.add('active');}
+function openModal(id){$(id).classList.add('open');}
+function closeModal(id){$(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+function updateNotifs(){
+  const bid=SESSION.brandId;
+  const pIn=(DB.transferLog||[]).filter(t=>t.fromBrand===bid&&t.status==='Pending').length;
+  const pAll=(DB.transferLog||[]).filter(t=>t.status==='Pending').length;
+  const d1=$('brand-tr-notif');if(d1)d1.innerHTML=pIn>0?`<span class="notif-dot"></span>`:'';
+  const d2=$('hq-tr-notif');if(d2)d2.innerHTML=pAll>0?`<span class="notif-dot"></span>`:'';
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD DYNAMIC STOK TABS
+// ═══════════════════════════════════════════════════
+function buildStokTabs(){
+  const bid=SESSION.brandId;
+  const wrap=$('stok-tabs'),contents=$('stok-tab-contents');
+  if(!wrap||!contents)return;
+  wrap.innerHTML='';contents.innerHTML='';
+  CATS.forEach((cat,i)=>{
+    const tab=document.createElement('div');
+    tab.className='tab'+(i===0?' active':'');
+    tab.textContent=cat;
+    const tid='stab-'+i;
+    tab.onclick=()=>{switchTab(tab,'stok',tid);renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));};
+    wrap.appendChild(tab);
+    const tc=document.createElement('div');
+    tc.id=tid;tc.className='tab-content'+(i===0?' active':'');
+    tc.innerHTML=`<div class="flex-row" style="margin-bottom:.8rem"><button class="btn btn-accent" onclick="openAddItem('${cat}')">+ Tambah Item</button></div><div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nama</th><th>Satuan</th><th>Stok</th><th>Avg/Hari (7hr)</th><th>Bertahan</th><th>Min Stok</th><th>Status</th><th></th></tr></thead><tbody id="stbl-${cat.replace(/ /g,'_')}"></tbody></table></div>`;
+    contents.appendChild(tc);
+  });
+  renderStokTable(bid,'Bahan Baku','stbl-Bahan_Baku');
+}
+
+function buildCatDropdowns(){
+  const bid=SESSION.brandId;
+  const t=today(),s7=addD(t,-7);
+  // keluar
+  const kcat=$('k-cat');if(kcat){kcat.innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');}
+  // stok masuk
+  const scat=$('sm-cat');if(scat){scat.innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');updateSmItems();}
+  // order filter
+  const olcat=$('ol-cat-filter');if(olcat){olcat.innerHTML='<option value="all">Semua</option>'+CATS.map(c=>`<option value="${c}">${c}</option>`).join('');}
+  // estimasi
+  const ecat=$('est-cat');if(ecat){ecat.innerHTML='<option value="all">Semua</option>'+CATS.map(c=>`<option value="${c}">${c}</option>`).join('');}
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard(){
+  const bid=SESSION.brandId,t=today();
+  const all=allFlat(bid);
+  let k=0,r=0;const alerts=[];
+  all.forEach(it=>{const[s,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger'){k++;alerts.push(it);}else if(c==='b-warn'){r++;alerts.push(it);}});
+  $('db-kritis').textContent=k;$('db-reorder').textContent=r;$('db-total').textContent=all.length;
+  $('db-waste').textContent=(DB.wasteLog[bid]||[]).filter(w=>w.tgl===t).length;
+  $('db-tr-pending').textContent=(DB.transferLog||[]).filter(tr=>tr.fromBrand===bid&&tr.status==='Pending').length;
+  const atbl=$('db-alert-tbl');
+  atbl.innerHTML=alerts.length?alerts.map(it=>{const avg=R(avgKeluar7(bid,it.cat,it.nama));const h=avg>0?R(it.stok/avg,1):null;const[s,c]=statusItem(bid,it.cat,it.nama);return`<tr><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono">${avg>0?avg+'/hr':'-'}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Semua stok aman</td></tr>';
+  // top 3 rekomendasi order
+  const lead=14,buf=5,s7=addD(t,-7);
+  const recs=allFlat(bid).map(it=>{const avg=avgKeluar(bid,it.cat,it.nama,s7,t);const qty=avg>0?Math.ceil(avg*lead+avg*buf-it.stok):0;return{...it,avg,qty};}).filter(x=>x.qty>0).sort((a,b)=>b.qty-a.qty).slice(0,3);
+  $('db-order-recs').innerHTML=recs.length?recs.map(it=>`<div class="order-rec-card"><div style="font-weight:600;font-size:13px;margin-bottom:2px">${it.nama}</div><div style="font-size:10px;color:var(--text3)">${it.cat} · avg keluar ${R(it.avg)}/hari</div><div class="order-rec-grid"><div class="orc"><div class="orc-val">${it.stok} <span style="font-size:9px">${it.satuan}</span></div><div class="orc-lbl">Stok</div></div><div class="orc"><div class="orc-val tag-a">${it.qty} <span style="font-size:9px">${it.satuan}</span></div><div class="orc-lbl">Perlu Order</div></div></div></div>`).join(''):'<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Tidak ada rekomendasi order</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// STOK MASUK PAGE
+// ═══════════════════════════════════════════════════
+function updateSmItems(){
+  const bid=SESSION.brandId,cat=$('sm-cat').value;
+  const items=bItems(bid)[cat]||[];
+  $('sm-item').innerHTML=items.map(i=>`<option>${i.nama}</option>`).join('');
+  updateSmSatuan();
+}
+function updateSmSatuan(){
+  const bid=SESSION.brandId,cat=$('sm-cat').value,nama=$('sm-item').value;
+  const it=bItems(bid)[cat]?.find(i=>i.nama===nama);
+  $('sm-satuan').value=it?.satuan||'';
+}
+$('sm-item')?.addEventListener('change',updateSmSatuan);
+function renderStokMasukPage(){
+  buildCatDropdowns();updateSmItems();renderMasukLog();
+}
+function submitStokMasuk(){
+  const bid=SESSION.brandId;
+  const tgl=$('sm-tgl').value||today(),cat=$('sm-cat').value,nama=$('sm-item').value;
+  const qty=parseFloat($('sm-qty').value)||0,sup=$('sm-sup').value,note=$('sm-note').value;
+  if(qty<=0)return alert('Jumlah harus lebih dari 0');
+  const it=bItems(bid)[cat]?.find(i=>i.nama===nama);
+  if(!it)return;
+  it.stok=R(it.stok+qty);
+  DB.masukLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama,qty,satuan:it.satuan,supplier:sup,catatan:note});
+  $('sm-qty').value='';$('sm-sup').value='';$('sm-note').value='';
+  renderMasukLog();renderDashboard();
+  alert(`✓ Stok masuk: ${nama} +${qty} ${it.satuan}`);
+}
+function renderMasukLog(){
+  const bid=SESSION.brandId;
+  const logs=[...DB.masukLog[bid]||[]].reverse().slice(0,50);
+  $('tbl-masuk-log').innerHTML=logs.length?logs.map(l=>`<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-g">+${l.qty} ${l.satuan}</td><td>${l.supplier||'-'}</td><td style="color:var(--text3)">${l.catatan||'-'}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Belum ada stok masuk</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// STOK INVENTORI
+// ═══════════════════════════════════════════════════
+function renderStokPage(){buildStokTabs();}
+function renderStokTable(bid,cat,tbodyId){
+  const el=$(tbodyId);if(!el)return;
+  const items=bItems(bid)[cat]||[];
+  const t=today(),s7=addD(t,-7);
+  el.innerHTML=items.map((it,i)=>{
+    const avg=avgKeluar(bid,cat,it.nama,s7,t);
+    const h=avg>0?R(it.stok/avg,1):null;
+    const r=it.min>0?it.stok/it.min:2;
+    const pct=Math.min(100,Math.round(r*50));
+    const[s,c]=statusItem(bid,cat,it.nama);
+    return`<tr><td>${it.nama}</td><td>${it.satuan}</td><td class="mono">${it.stok}</td><td class="mono">${avg>0?avg+'/hr':'<span style="color:var(--text3)">—</span>'}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td class="mono" style="color:var(--text3)">${it.min}</td><td><span class="badge ${c}">${s}</span></td><td class="flex-row" style="gap:4px"><button class="btn btn-sm" onclick="editMin('${bid}','${cat}',${i})">Edit</button></td></tr>`;
+  }).join('')||'<tr><td colspan="8" class="empty">Belum ada item</td></tr>';
+}
+function openAddItem(cat){
+  const nama=prompt(`Nama item baru untuk kategori "${cat}":`);if(!nama)return;
+  const satuan=prompt('Satuan (kg/pcs/liter/pack/roll):','kg');
+  const stok=parseFloat(prompt('Stok awal:','0'))||0;
+  const min=parseFloat(prompt('Min stok (reorder point):','0'))||0;
+  const bid=SESSION.brandId;
+  bItems(bid)[cat].push({nama,satuan,stok,min,paiManual:0});
+  renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));
+}
+function editMin(bid,cat,i){
+  const it=bItems(bid)[cat][i];
+  const v=prompt(`Min stok "${it.nama}" (${it.satuan}):`,it.min);
+  if(v!==null&&!isNaN(parseFloat(v))){it.min=parseFloat(v);renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));}
+}
+
+// ═══════════════════════════════════════════════════
+// KELUAR HARIAN
+// ═══════════════════════════════════════════════════
+function renderKeluar(){
+  buildCatDropdowns();$('k-tgl').value=$('k-tgl').value||today();renderKeluarForm();renderKeluarLog();
+}
+function renderKeluarForm(){
+  const bid=SESSION.brandId,cat=$('k-cat').value;
+  $('k-lbl').textContent='Stok Keluar — '+cat;
+  const t=today(),s7=addD(t,-7);
+  const items=bItems(bid)[cat]||[];
+  $('keluar-body').innerHTML=items.map((it,i)=>{
+    const avg=avgKeluar(bid,cat,it.nama,s7,t);
+    return`<div class="daily-row"><div style="flex:1;min-width:130px"><div style="font-weight:500;font-size:12px">${it.nama}</div><div style="font-size:10px;color:var(--text3)">Stok: ${it.stok} ${it.satuan}${avg>0?' · avg '+avg+'/hr':''}</div></div><input class="daily-input" type="number" min="0" step="0.01" placeholder="0" id="ki-${i}"/><span style="font-size:10px;color:var(--text3);min-width:28px">${it.satuan}</span><select id="ka-${i}" style="background:var(--bg3);border:.5px solid var(--border2);border-radius:var(--r);padding:4px 7px;color:var(--text);font-size:10.5px;font-family:'Sora',sans-serif;outline:none;width:145px"><option>Pemakaian Produksi</option><option>Sampel/Tester</option><option>Rusak/Waste</option><option>Lainnya</option></select></div>`;
+  }).join('')||'<div class="empty">Belum ada item di kategori ini</div>';
+}
+function submitKeluarBatch(){
+  const bid=SESSION.brandId,cat=$('k-cat').value,tgl=$('k-tgl').value||today();
+  const items=bItems(bid)[cat]||[];let count=0;
+  items.forEach((it,i)=>{
+    const qty=parseFloat($('ki-'+i)?.value)||0;
+    const alasan=$('ka-'+i)?.value||'Pemakaian Produksi';
+    if(qty>0){
+      if(qty>it.stok){alert(`Stok "${it.nama}" tidak cukup! Saat ini: ${it.stok} ${it.satuan}`);return;}
+      it.stok=R(it.stok-qty);
+      DB.keluarLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama:it.nama,qty,satuan:it.satuan,alasan});
+      if(alasan==='Rusak/Waste')DB.wasteLog[bid].push({ts:new Date().toISOString(),tgl,jenis:'Produksi Gagal',item:it.nama,qty,satuan:it.satuan,sebab:'Dari stok keluar (rusak)'});
+      count++;
+    }
+  });
+  if(count){alert(`✓ ${count} item tersimpan`);renderKeluarLog();renderDashboard();}
+  else alert('Tidak ada qty yang diisi (> 0)');
+}
+function renderKeluarLog(){
+  const bid=SESSION.brandId;
+  const logs=[...DB.keluarLog[bid]||[]].reverse().slice(0,60);
+  $('tbl-keluar-log').innerHTML=logs.length?logs.map(l=>`<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-o">${l.qty} ${l.satuan}</td><td style="color:var(--text3)">${l.alasan}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">Belum ada data</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// WASTE
+// ═══════════════════════════════════════════════════
+function renderWastePage(){
+  const bid=SESSION.brandId;
+  $('wa-tgl').value=$('wa-tgl').value||today();
+  const viewTgl=$('w-view-tgl').value||today();
+  const all=DB.wasteLog[bid]||[];
+  const todayW=all.filter(w=>w.tgl===viewTgl);
+  $('w-today').textContent=todayW.length;
+  $('w-prod').textContent=all.filter(w=>w.jenis==='Produksi Gagal').length;
+  $('w-exp').textContent=all.filter(w=>w.jenis==='Bahan Expired').length;
+  $('w-kem').textContent=all.filter(w=>w.jenis==='Kemasan Rusak').length;
+  const dotC={'Produksi Gagal':'var(--orange)','Bahan Expired':'var(--red)','Kemasan Rusak':'var(--blue)'};
+  const badC={'Produksi Gagal':'b-warn','Bahan Expired':'b-danger','Kemasan Rusak':'b-blue'};
+  const body=$('waste-log-body');
+  const show=[...all].reverse().slice(0,50);
+  body.innerHTML=show.length?show.map(w=>`<div class="waste-entry"><div class="waste-dot" style="background:${dotC[w.jenis]||'var(--text3)'}"></div><div style="flex:1"><div style="font-weight:500">${w.item} — <span class="mono tag-a">${w.qty} ${w.satuan}</span></div><div style="font-size:10px;color:var(--text3);margin-top:1px">${w.sebab}</div></div><div style="text-align:right;flex-shrink:0"><span class="badge ${badC[w.jenis]||'b-gray'}">${w.jenis}</span><div style="font-size:10px;color:var(--text3);margin-top:3px">${fmtD(w.tgl)}</div></div></div>`).join(''):'<div class="empty">Belum ada waste tercatat</div>';
+}
+function submitWaste(){
+  const bid=SESSION.brandId;
+  const jenis=$('wa-jenis').value,tgl=$('wa-tgl').value||today(),item=$('wa-item').value.trim(),qty=parseFloat($('wa-qty').value)||0,satuan=$('wa-sat').value,sebab=$('wa-sebab').value.trim();
+  if(!item||qty<=0)return alert('Isi item dan jumlah waste');
+  DB.wasteLog[bid].push({ts:new Date().toISOString(),tgl,jenis,item,qty,satuan,sebab});
+  closeModal('modal-waste');renderWastePage();renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════
+// ORDER LIST & REKOMENDASI
+// ═══════════════════════════════════════════════════
+function renderOrderList(){
+  const bid=SESSION.brandId;
+  const avgS=$('ol-avg-start').value,avgE=$('ol-avg-end').value;
+  const lead=parseInt($('ol-lead').value)||14;
+  const buf=parseInt($('ol-buf').value)||5;
+  const catF=$('ol-cat-filter').value;
+  const showF=$('ol-show-filter').value;
+
+  $('ol-lead-disp').textContent=lead+' hr';
+  $('ol-buf-disp').textContent=buf+' hr';
+
+  // hitung rentang hari
+  let rangeDays='—';
+  if(avgS&&avgE){const d1=new Date(avgS+'T00:00:00'),d2=new Date(avgE+'T00:00:00');const diff=Math.max(1,Math.round((d2-d1)/86400000)+1);rangeDays=diff+' hr';}
+  $('ol-range-disp').textContent=rangeDays;
+
+  let items=allFlat(bid);
+  if(catF!=='all')items=items.filter(i=>i.cat===catF);
+
+  const rows=items.map(it=>{
+    const avg=avgKeluar(bid,it.cat,it.nama,avgS||addD(today(),-7),avgE||today());
+    // Rumus: (avg × lead) + (avg × buf) - stok
+    const qtyOrder=avg>0?Math.max(0,Math.ceil(avg*lead+avg*buf-it.stok)):0;
+    const stokSetelah=it.stok+qtyOrder;
+    const bertahanSetelah=avg>0?R(stokSetelah/avg,1):null;
+    const[s,c]=statusItem(bid,it.cat,it.nama);
+    const perluOrder=qtyOrder>0;
+    if(showF==='need'&&!perluOrder)return null;
+    const rowCls=perluOrder?'':'';
+    const dasar=avg>0?`${R(avg)}/hr × (${lead}+${buf})`:'-';
+    return{it,avg,qtyOrder,stokSetelah,bertahanSetelah,s,c,perluOrder};
+  }).filter(Boolean);
+
+  $('ol-count').textContent=rows.filter(r=>r.perluOrder).length;
+
+  $('tbl-order-list-body').innerHTML=rows.length?rows.map(({it,avg,qtyOrder,stokSetelah,bertahanSetelah,s,c,perluOrder})=>`<tr style="${perluOrder?'':'opacity:.6'}">
+    <td style="font-weight:${perluOrder?'500':'400'}">${it.nama}</td>
+    <td><span class="badge b-blue">${it.cat}</span></td>
+    <td class="mono">${it.stok} ${it.satuan}</td>
+    <td class="mono">${avg>0?R(avg)+'/hr':'<span style="color:var(--text3)">—</span>'}</td>
+    <td class="mono" style="font-size:10px;color:var(--text3)">${avg>0?`(${R(avg)}×${lead})+(${R(avg)}×${buf})−${it.stok}`:'-'}</td>
+    <td class="mono ${perluOrder?'tag-a':''}" style="font-weight:${perluOrder?'600':'400'}">${qtyOrder>0?qtyOrder:'-'} ${qtyOrder>0?it.satuan:''}</td>
+    <td class="mono tag-g">${stokSetelah} ${it.satuan}</td>
+    <td class="mono ${bertahanSetelah&&bertahanSetelah<3?'tag-r':bertahanSetelah&&bertahanSetelah<7?'tag-o':'tag-g'}">${bertahanSetelah!==null?bertahanSetelah+' hr':'—'}</td>
+    <td><span class="badge ${c}">${s}</span></td>
+  </tr>`).join(''):'<tr><td colspan="9" class="empty">Tidak ada item</td></tr>';
+
+  renderOrderLog();
+}
+function renderOrderLog(){
+  const bid=SESSION.brandId;
+  const logs=[...DB.orderLog[bid]||[]].reverse();
+  $('tbl-order-log').innerHTML=logs.length?logs.map((o,ri)=>{
+    const i=(DB.orderLog[bid]||[]).length-1-ri;
+    return`<tr><td class="mono" style="font-size:10px">${fmtD(o.tgl)}</td><td>${o.item}</td><td class="mono">${o.qty} ${o.satuan}</td><td>${o.supplier||'-'}</td><td class="mono" style="font-size:10px">${fmtD(o.estTiba)}</td><td><span class="badge ${o.status==='Tiba'?'b-ok':'b-blue'}">${o.status}</span></td><td>${o.status!=='Tiba'?`<button class="btn btn-sm" onclick="setOrderTiba('${bid}',${i})">Tandai Tiba</button>`:''}</td></tr>`;
+  }).join(''):'<tr><td colspan="7" class="empty">Belum ada order</td></tr>';
+}
+function setOrderTiba(bid,i){
+  const o=DB.orderLog[bid][i];o.status='Tiba';
+  const found=allFlat(bid).find(it=>it.nama===o.item);
+  if(found){const it=bItems(bid)[found.cat]?.find(it=>it.nama===o.item);if(it){it.stok=R(it.stok+o.qty);DB.masukLog[bid].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:o.item,qty:o.qty,satuan:it.satuan,supplier:o.supplier||'',catatan:'Order tiba'});}}
+  renderOrderList();renderDashboard();
+}
+function submitOrderCatat(){
+  const bid=SESSION.brandId;
+  const item=$('oc-item').value.trim(),qty=parseFloat($('oc-qty').value)||0,satuan=$('oc-sat').value,supplier=$('oc-sup').value.trim(),tgl=$('oc-tgl').value||today(),lead=parseInt($('oc-lead').value)||14;
+  if(!item||qty<=0)return alert('Isi item dan jumlah');
+  DB.orderLog[bid].push({ts:new Date().toISOString(),tgl,item,qty,satuan,supplier,leadDays:lead,estTiba:addD(tgl,lead),status:'Menunggu'});
+  closeModal('modal-order-catat');renderOrderList();
+}
+
+// ═══════════════════════════════════════════════════
+// ESTIMASI BERTAHAN
+// ═══════════════════════════════════════════════════
+function renderEstimasi(){
+  const bid=SESSION.brandId;
+  const s=$('est-s').value||today(),e=$('est-e').value;
+  const avgS=$('est-avg-s').value,avgE=$('est-avg-e').value;
+  const catF=$('est-cat').value;
+  const startD=new Date(s+'T00:00:00'),endD=e?new Date(e+'T00:00:00'):null;
+  const diff=endD?Math.max(0,Math.round((endD-startD)/86400000)):0;
+  $('est-days').textContent=diff+' hr';
+  let items=allFlat(bid);
+  if(catF!=='all')items=items.filter(i=>i.cat===catF);
+  let habis=0,hampir=0,aman=0;
+  const rows=items.map(it=>{
+    const avg=avgKeluar(bid,it.cat,it.nama,avgS,avgE);
+    const h=avg>0?R(it.stok/avg,1):null;
+    const butuh=endD&&avg>0?R(avg*diff):null;
+    const sisa=endD&&avg>0?R(it.stok-avg*diff):null;
+    let es,ec;
+    if(!avg){es='Belum Ada Data';ec='b-gray';}
+    else if(endD&&sisa!==null&&sisa<=0){es='Habis Sebelum Target';ec='b-danger';habis++;}
+    else if(endD&&sisa!==null&&it.stok>0&&sisa/it.stok<0.2){es='Hampir Habis';ec='b-warn';hampir++;}
+    else{es='Aman';ec='b-ok';aman++;}
+    return`<tr><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono">${avg>0?avg+'/hr':'-'}</td><td class="mono">${butuh!==null?butuh+' '+it.satuan:'-'}</td><td class="mono ${sisa!==null?(sisa<=0?'tag-r':sisa/it.stok<0.2?'tag-o':'tag-g'):''}">${sisa!==null?R(sisa)+' '+it.satuan:'-'}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${ec}">${es}</span></td></tr>`;
+  });
+  $('est-habis').textContent=habis;$('est-hampir').textContent=hampir;$('est-aman').textContent=aman;
+  $('tbl-est').innerHTML=rows.join('')||'<tr><td colspan="8" class="empty">Tidak ada item</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// RESEP & FORMULA
+// ═══════════════════════════════════════════════════
+function renderResep(){
+  const bid=SESSION.brandId;
+  const reseps=DB.resep[bid]||[];
+  const container=$('resep-container');
+  if(!reseps.length){container.innerHTML='<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada resep. Tambah resep untuk mulai menghitung kebutuhan bahan.</div>';}
+  else{
+    container.innerHTML=reseps.map((r,i)=>`<div class="card" style="margin-bottom:.8rem"><div class="card-header"><div><div style="font-weight:600;font-size:13px">${r.nama}</div><div style="font-size:10px;color:var(--text3);margin-top:1px">Yield: ${r.porsi} ${r.satuanYield||'pcs'} per batch · ${r.catatan||''}</div></div><div class="flex-row" style="gap:5px"><button class="btn btn-sm" onclick="editResep(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="hapusResep(${i})">Hapus</button></div></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bahan</th><th>Qty per ${r.porsi} ${r.satuanYield||'pcs'}</th><th>Satuan</th></tr></thead><tbody>${r.bahan.map(b=>`<tr><td>${b.nama}</td><td class="mono">${b.qty}</td><td>${b.satuan}</td></tr>`).join('')}</tbody></table></div></div>`).join('');
+  }
+  // kalkulator
+  const kal=$('kal-resep');
+  kal.innerHTML=reseps.length?reseps.map((r,i)=>`<option value="${i}">${r.nama}</option>`).join(''):'<option value="">Tidak ada resep</option>';
+  renderKalkulator();
+}
+function renderKalkulator(){
+  const bid=SESSION.brandId;
+  const reseps=DB.resep[bid]||[];
+  const idx=parseInt($('kal-resep').value)||0;
+  const porsiTarget=parseFloat($('kal-porsi').value)||1;
+  const res=$('kal-result');
+  if(!reseps.length){res.innerHTML='<div class="empty">Belum ada resep</div>';return;}
+  const r=reseps[idx];if(!r){res.innerHTML='';return;}
+  const multiplier=porsiTarget/r.porsi;
+  const rows=r.bahan.map(b=>{
+    const butuh=R(b.qty*multiplier);
+    const it=allFlat(bid).find(i=>i.nama.toLowerCase()===b.nama.toLowerCase());
+    const stok=it?it.stok:null;
+    const cukup=stok===null?null:stok>=butuh;
+    return`<tr><td>${b.nama}</td><td class="mono">${b.qty} ${b.satuan}</td><td class="mono tag-a">${butuh} ${b.satuan}</td><td class="mono ${stok!==null?(cukup?'tag-g':'tag-r'):''}">${stok!==null?stok+' '+b.satuan:'Tidak di stok'}</td><td>${stok!==null?`<span class="badge ${cukup?'b-ok':'b-danger'}">${cukup?'Cukup':'Kurang '+(R(butuh-stok))+' '+b.satuan}</span>`:'-'}</td></tr>`;
+  }).join('');
+  res.innerHTML=`<div class="sec-title" style="margin-top:.5rem">Kebutuhan untuk ${porsiTarget} ${r.satuanYield||'pcs'}</div><div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bahan</th><th>Per ${r.porsi} ${r.satuanYield}</th><th>Butuh (${porsiTarget} ${r.satuanYield})</th><th>Stok Tersedia</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function submitResep(){
+  const bid=SESSION.brandId;
+  const nama=$('r-nama').value.trim(),porsi=parseFloat($('r-porsi').value)||1,satuanYield=$('r-satuan-yield').value.trim()||'pcs',catatan=$('r-catatan').value.trim();
+  const bahanRaw=$('r-bahan').value.trim();
+  if(!nama||!bahanRaw)return alert('Isi nama dan bahan resep');
+  const bahan=bahanRaw.split('\n').map(l=>{const p=l.split('|').map(x=>x.trim());return{nama:p[0]||'',qty:parseFloat(p[1])||0,satuan:p[2]||'gram'};}).filter(b=>b.nama&&b.qty>0);
+  if(!bahan.length)return alert('Format bahan tidak valid. Gunakan: Nama | Qty | Satuan');
+  const idx=parseInt($('resep-edit-idx').value);
+  if(idx>=0)DB.resep[bid][idx]={nama,porsi,satuanYield,catatan,bahan};
+  else DB.resep[bid].push({nama,porsi,satuanYield,catatan,bahan});
+  $('resep-edit-idx').value='-1';
+  closeModal('modal-resep-add');renderResep();
+}
+function editResep(i){
+  const bid=SESSION.brandId,r=DB.resep[bid][i];
+  $('resep-modal-title').textContent='Edit Resep';$('resep-edit-idx').value=i;
+  $('r-nama').value=r.nama;$('r-porsi').value=r.porsi;$('r-satuan-yield').value=r.satuanYield||'';$('r-catatan').value=r.catatan||'';
+  $('r-bahan').value=r.bahan.map(b=>`${b.nama} | ${b.qty} | ${b.satuan}`).join('\n');
+  openModal('modal-resep-add');
+}
+function hapusResep(i){if(confirm('Hapus resep ini?')){DB.resep[SESSION.brandId].splice(i,1);renderResep();}}
+
+// ═══════════════════════════════════════════════════
+// TRANSFER
+// ═══════════════════════════════════════════════════
+function openTransferReq(){
+  const bid=SESSION.brandId;
+  const others=Object.entries(DB.brands).filter(([id])=>id!==bid);
+  $('tr-from').innerHTML=others.map(([id,b])=>`<option value="${id}">${b.name}</option>`).join('');
+  // to = brand sendiri
+  $('tr-to-brand').innerHTML=`<option value="${bid}">${DB.brands[bid].name} (brand saya)</option>`;
+  $('tr-qty').value='';$('tr-item').value='';$('tr-alasan').value='';
+  openModal('modal-tr-req');
+}
+function submitTransferReq(){
+  const bid=SESSION.brandId;
+  const from=$('tr-from').value,item=$('tr-item').value.trim(),qty=parseFloat($('tr-qty').value)||0,satuan=$('tr-sat').value,alasan=$('tr-alasan').value.trim();
+  if(!item||qty<=0)return alert('Isi item dan jumlah');
+  DB.transferLog.push({ts:new Date().toISOString(),tgl:today(),fromBrand:from,toBrand:bid,item,qty,satuan,alasan,status:'Pending',reqBy:SESSION.user.username});
+  closeModal('modal-tr-req');renderTransfer();updateNotifs();
+}
+function renderTransfer(){
+  const bid=SESSION.brandId;
+  const incoming=(DB.transferLog||[]).filter(t=>t.fromBrand===bid&&t.status==='Pending');
+  const outgoing=(DB.transferLog||[]).filter(t=>t.toBrand===bid&&t.status==='Pending');
+  const done=(DB.transferLog||[]).filter(t=>(t.fromBrand===bid||t.toBrand===bid)&&t.status!=='Pending');
+  $('tr-masuk').textContent=incoming.length;$('tr-keluar').textContent=outgoing.length;$('tr-done').textContent=done.length;
+  $('tbl-tr-incoming').innerHTML=incoming.length?incoming.map(t=>{const idx=DB.transferLog.indexOf(t);return`<tr><td><span class="badge" style="color:${DB.brands[t.toBrand]?.color||'var(--text2)'}">${DB.brands[t.toBrand]?.name||t.toBrand}</span></td><td>${t.item}</td><td class="mono">${t.qty} ${t.satuan}</td><td style="color:var(--text3)">${t.alasan}</td><td class="mono" style="font-size:10px">${fmtD(t.tgl)}</td><td class="flex-row" style="gap:5px"><button class="btn btn-sm" style="color:var(--green)" onclick="approveTransfer(${idx})">Setuju</button><button class="btn btn-sm btn-danger" onclick="rejectTransfer(${idx})">Tolak</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Tidak ada request masuk</td></tr>';
+  const history=[...DB.transferLog].filter(t=>t.fromBrand===bid||t.toBrand===bid).reverse().slice(0,30);
+  $('tbl-tr-history').innerHTML=history.length?history.map(t=>{const sc=t.status==='Approved'?'b-ok':t.status==='Rejected'?'b-danger':'b-warn';return`<tr><td class="mono" style="font-size:10px">${fmtD(t.tgl)}</td><td><span class="badge" style="color:${DB.brands[t.fromBrand]?.color||'var(--text2)'}">${DB.brands[t.fromBrand]?.name}</span></td><td><span class="badge" style="color:${DB.brands[t.toBrand]?.color||'var(--text2)'}">${DB.brands[t.toBrand]?.name}</span></td><td>${t.item}</td><td class="mono">${t.qty} ${t.satuan}</td><td><span class="badge ${sc}">${t.status}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Belum ada riwayat</td></tr>';
+}
+function approveTransfer(idx){
+  const t=DB.transferLog[idx];if(!t||t.status!=='Pending')return;
+  const fromItems=allFlat(t.fromBrand);
+  const found=fromItems.find(i=>i.nama.toLowerCase()===t.item.toLowerCase());
+  if(found){
+    const it=bItems(t.fromBrand)[found.cat]?.find(i=>i.nama===found.nama);
+    if(it){
+      if(it.stok<t.qty){alert(`Stok "${t.item}" di ${DB.brands[t.fromBrand].name} tidak cukup (${it.stok} ${it.satuan})`);return;}
+      it.stok=R(it.stok-t.qty);
+      DB.keluarLog[t.fromBrand].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:it.nama,qty:t.qty,satuan:it.satuan,alasan:`Transfer ke ${DB.brands[t.toBrand].name}`});
+      const toFound=allFlat(t.toBrand).find(i=>i.nama.toLowerCase()===t.item.toLowerCase());
+      if(toFound){const toIt=bItems(t.toBrand)[toFound.cat]?.find(i=>i.nama===toFound.nama);if(toIt){toIt.stok=R(toIt.stok+t.qty);DB.masukLog[t.toBrand].push({ts:new Date().toISOString(),tgl:today(),cat:toFound.cat,nama:toIt.nama,qty:t.qty,satuan:toIt.satuan,supplier:`Transfer dari ${DB.brands[t.fromBrand].name}`,catatan:t.alasan});}}
+    }
+  }
+  t.status='Approved';t.approvedBy=SESSION.user.username;t.approvedAt=new Date().toISOString();
+  renderTransfer();renderDashboard();updateNotifs();
+  alert(`Transfer "${t.item}" berhasil!`);
+}
+function rejectTransfer(idx){
+  const t=DB.transferLog[idx];if(!t||t.status!=='Pending')return;
+  if(!confirm('Tolak request transfer ini?'))return;
+  t.status='Rejected';t.rejectedBy=SESSION.user.username;
+  renderTransfer();updateNotifs();
+}
+
+// ═══════════════════════════════════════════════════
+// SDM & KPI
+// ═══════════════════════════════════════════════════
+function renderSDM(){
+  const bid=SESSION.brandId;
+  const sdms=DB.sdm[bid]||[];
+  const posisis=DB.posisi[bid]||[];
+  const shifts=DB.shifts[bid]||[];
+  // populate selects
+  $('sdm-posisi').innerHTML=posisis.map(p=>`<option value="${p.nama}">${p.nama} (target: ${p.target} ${p.satuan}/hr)</option>`).join('');
+  $('sdm-shift').innerHTML=shifts.map(s=>`<option value="${s.nama}">${s.nama} (${s.start}–${s.end})</option>`).join('');
+  updateSDMTargetPreview();
+  // metrics
+  const above=sdms.filter(s=>{const p=posisis.find(p=>p.nama===s.posisi);return p&&s.aktual>=p.target;}).length;
+  const below=sdms.filter(s=>{const p=posisis.find(p=>p.nama===s.posisi);return p&&s.aktual<p.target;}).length;
+  $('sdm-total').textContent=sdms.length;$('sdm-above').textContent=above;$('sdm-below').textContent=below;
+  const avgKPI=sdms.length?Math.round(sdms.reduce((acc,s)=>{const p=posisis.find(p=>p.nama===s.posisi);return acc+(p?s.aktual/p.target*100:0);},0)/sdms.length):0;
+  $('sdm-avg-kpi').textContent=avgKPI+'%';
+  // shift distribution
+  const dist={};
+  shifts.forEach(s=>{dist[s.nama]=sdms.filter(k=>k.shift===s.nama).length;});
+  $('sdm-shift-dist').innerHTML=shifts.map(s=>{const n=dist[s.nama]||0;const col=s.nama==='Pagi'?'var(--accent)':s.nama==='Sore'?'var(--orange)':'var(--blue)';return`<div style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl);padding:.6rem .9rem;text-align:center"><div class="mono" style="font-size:18px;font-weight:600;color:${col}">${n}</div><div style="font-size:10px;color:var(--text3)">${s.nama}</div><div style="font-size:9px;color:var(--text3)">${s.start}–${s.end}</div></div>`;}).join('');
+  // KPI cards
+  const list=$('sdm-kpi-list');
+  list.innerHTML=sdms.length?sdms.map((k,i)=>{
+    const p=posisis.find(p=>p.nama===k.posisi);
+    const target=p?p.target:0,satP=p?p.satuan:'';
+    const pct=target>0?Math.round(k.aktual/target*100):0;
+    const col=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)';
+    const shiftObj=shifts.find(s=>s.nama===k.shift);
+    const shiftLbl=shiftObj?`${k.shift} (${shiftObj.start}–${shiftObj.end})`:k.shift;
+    return`<div class="kpi-card"><div class="kpi-header"><div><div class="kpi-name">${k.nama}</div><div class="kpi-meta">${k.posisi} · ${shiftLbl}</div><div class="kpi-meta" style="color:var(--text3)">Target: ${target} ${satP}/hari</div></div><div class="flex-row" style="gap:5px"><button class="btn btn-sm" onclick="updateSDMAktual(${i})">Update</button><button class="btn btn-sm btn-danger" onclick="hapusSDM(${i})">Hapus</button></div></div><div class="kpi-row"><span style="color:var(--text3)">Hasil kerja</span><span class="mono">${k.aktual} ${k.satuanHasil||satP}</span></div><div class="kpi-row"><span style="color:var(--text3)">Target</span><span class="mono">${target} ${satP}</span></div><div style="margin-top:4px"><div class="kpi-row" style="margin-bottom:4px"><span style="color:var(--text3)">KPI</span><span class="kpi-pct" style="color:${col}">${pct}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div></div>${k.note?`<div style="font-size:10px;color:var(--text3);margin-top:6px">${k.note}</div>`:''}</div>`;
+  }).join(''):'<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada karyawan terdaftar. Klik tombol "Tambah Karyawan".</div>';
+}
+function updateSDMTargetPreview(){
+  const bid=SESSION.brandId;
+  const posisis=DB.posisi[bid]||[];
+  const nama=$('sdm-posisi').value;
+  const p=posisis.find(p=>p.nama===nama);
+  $('sdm-target-preview').value=p?p.target+' '+p.satuan+'/hari':'—';
+}
+$('sdm-posisi')?.addEventListener('change',updateSDMTargetPreview);
+function submitSDM(){
+  const bid=SESSION.brandId;
+  const nama=$('sdm-nama').value.trim(),posisi=$('sdm-posisi').value,shift=$('sdm-shift').value;
+  const aktual=parseFloat($('sdm-aktual').value)||0,satuanHasil=$('sdm-satuan-hasil').value.trim(),note=$('sdm-note').value.trim();
+  if(!nama)return alert('Nama karyawan wajib diisi');
+  const existing=DB.sdm[bid].findIndex(s=>s.nama.toLowerCase()===nama.toLowerCase());
+  const entry={nama,posisi,shift,aktual,satuanHasil,note,tgl:today()};
+  if(existing>=0)DB.sdm[bid][existing]=entry;else DB.sdm[bid].push(entry);
+  closeModal('modal-sdm-add');renderSDM();
+}
+function updateSDMAktual(i){
+  const bid=SESSION.brandId,k=DB.sdm[bid][i];
+  const v=prompt(`Hasil kerja hari ini untuk "${k.nama}":`,k.aktual);
+  if(v!==null&&!isNaN(parseFloat(v))){k.aktual=parseFloat(v);k.tgl=today();renderSDM();}
+}
+function hapusSDM(i){if(confirm('Hapus karyawan ini?')){DB.sdm[SESSION.brandId].splice(i,1);renderSDM();}}
+// POSISI MANAGER
+function renderPosisiTable(){
+  const bid=SESSION.brandId,posisis=DB.posisi[bid]||[];
+  $('tbl-posisi').innerHTML=posisis.length?posisis.map((p,i)=>`<tr><td>${p.nama}</td><td class="mono">${p.target}</td><td>${p.satuan}</td><td class="flex-row" style="gap:4px"><button class="btn btn-sm" onclick="editPosisi(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="hapusPosisi(${i})">Hapus</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Belum ada posisi</td></tr>';
+}
+function submitPosisi(){
+  const bid=SESSION.brandId,nama=$('pos-nama').value.trim(),target=parseFloat($('pos-target').value)||0,satuan=$('pos-satuan').value.trim();
+  if(!nama||!satuan)return alert('Isi nama posisi dan satuan');
+  DB.posisi[bid].push({nama,target,satuan});
+  $('pos-nama').value='';$('pos-target').value='';$('pos-satuan').value='';
+  renderPosisiTable();
+}
+function editPosisi(i){
+  const bid=SESSION.brandId,p=DB.posisi[bid][i];
+  const t=parseFloat(prompt(`Target baru untuk "${p.nama}" (${p.satuan}/hari):`,p.target));
+  if(!isNaN(t)){DB.posisi[bid][i].target=t;renderPosisiTable();}
+}
+function hapusPosisi(i){if(confirm('Hapus posisi ini?')){DB.posisi[SESSION.brandId].splice(i,1);renderPosisiTable();}}
+document.getElementById('modal-posisi-mgr').addEventListener('click',e=>{if(e.target.closest('.modal')||e.target===document.getElementById('modal-posisi-mgr')){if(e.target===document.getElementById('modal-posisi-mgr'))closeModal('modal-posisi-mgr');}});
+$('modal-posisi-mgr').querySelector('.modal')?.addEventListener('click',e=>e.stopPropagation());
+function openPosisiMgr(){renderPosisiTable();openModal('modal-posisi-mgr');}
+// SHIFT MANAGER
+function renderShiftTable(){
+  const bid=SESSION.brandId,shifts=DB.shifts[bid]||[];
+  $('tbl-shift').innerHTML=shifts.length?shifts.map((s,i)=>`<tr><td>${s.nama}</td><td class="mono">${s.start} – ${s.end}</td><td><button class="btn btn-sm btn-danger" onclick="hapusShift(${i})">Hapus</button></td></tr>`).join(''):'<tr><td colspan="3" class="empty">Belum ada shift</td></tr>';
+}
+function submitShift(){
+  const bid=SESSION.brandId,nama=$('shift-nama').value.trim(),start=$('shift-start').value,end=$('shift-end').value;
+  if(!nama||!start||!end)return alert('Isi nama, jam mulai dan selesai');
+  DB.shifts[bid].push({nama,start,end});
+  $('shift-nama').value='';$('shift-start').value='';$('shift-end').value='';
+  renderShiftTable();
+}
+function hapusShift(i){if(confirm('Hapus shift ini?')){DB.shifts[SESSION.brandId].splice(i,1);renderShiftTable();}}
+// override kelola modal clicks
+['modal-posisi-mgr','modal-shift-mgr'].forEach(id=>{
+  const m=$(id);if(!m)return;
+  m.addEventListener('click',e=>{if(e.target===m)closeModal(id);});
+});
+// nav buttons
+document.querySelector('[onclick="openModal(\'modal-posisi-mgr\')"]')?.addEventListener('click',()=>renderPosisiTable());
+document.querySelector('[onclick="openModal(\'modal-shift-mgr\')"]')?.addEventListener('click',()=>renderShiftTable());
+
+// ═══════════════════════════════════════════════════
+// LAPORAN HARIAN
+// ═══════════════════════════════════════════════════
+function renderLaporan(){
+  const bid=SESSION.brandId,tgl=$('lap-tgl').value||today();
+  const kO=(DB.keluarLog[bid]||[]).filter(l=>l.tgl===tgl);
+  const kI=(DB.masukLog[bid]||[]).filter(l=>l.tgl===tgl);
+  const kW=(DB.wasteLog[bid]||[]).filter(l=>l.tgl===tgl);
+  const kT=(DB.transferLog||[]).filter(t=>(t.fromBrand===bid||t.toBrand===bid)&&t.tgl===tgl&&t.status==='Approved');
+  $('lap-k').textContent=kO.length;$('lap-m').textContent=kI.length;$('lap-w').textContent=kW.length;$('lap-t').textContent=kT.length;
+  const all=[...kI.map(l=>({...l,_t:'masuk'})),...kO.map(l=>({...l,_t:'keluar'})),...kW.map(l=>({...l,_t:'waste'})),...kT.map(t=>({...t,_t:'transfer'}))].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const tCol={masuk:'var(--green)',keluar:'var(--orange)',waste:'var(--red)',transfer:'var(--blue)'};
+  const tLbl={masuk:'Stok Masuk',keluar:'Stok Keluar',waste:'Waste',transfer:'Transfer'};
+  $('lap-body').innerHTML=all.length?all.map(l=>{const col=tCol[l._t];const name=l.nama||l.item||l.fromBrand||'-';const qty=l.qty||'';const sat=l.satuan||'';const desc=l.alasan||l.sebab||l.catatan||l.supplier||'';return`<div class="waste-entry"><div class="waste-dot" style="background:${col}"></div><div style="flex:1"><div style="font-weight:500">${name}${qty?' — ':''}<span class="mono" style="color:${col}">${qty?qty+' '+sat:''}</span></div><div style="font-size:10px;color:var(--text3);margin-top:1px">${desc}</div></div><div style="text-align:right;flex-shrink:0"><span class="badge" style="color:${col};border-color:${col}33;background:${col}18">${tLbl[l._t]}</span><div style="font-size:10px;color:var(--text3);margin-top:3px">${new Date(l.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;}).join(''):'<div class="empty">Tidak ada aktivitas pada tanggal ini</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// HQ
+// ═══════════════════════════════════════════════════
+function renderHQDash(){
+  const t=today();let totK=0,totR=0,todW=0;
+  const bids=Object.keys(DB.brands);
+  bids.forEach(bid=>{allFlat(bid).forEach(it=>{const[,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger')totK++;else if(c==='b-warn')totR++;});todW+=(DB.wasteLog[bid]||[]).filter(w=>w.tgl===t).length;});
+  const pend=(DB.transferLog||[]).filter(tr=>tr.status==='Pending').length;
+  $('hq-kritis').textContent=totK;$('hq-reorder').textContent=totR;$('hq-brands').textContent=bids.length;$('hq-tr-pend').textContent=pend;$('hq-waste').textContent=todW;
+  $('hq-brand-grid').innerHTML=bids.map(bid=>{const b=DB.brands[bid];let k=0,r=0,a=0;allFlat(bid).forEach(it=>{const[,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger')k++;else if(c==='b-warn')r++;else a++;});const pic=DB.users.find(u=>u.brand===bid&&u.role==='pic');return`<div class="brand-card"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.7rem"><div><div style="font-size:14px;font-weight:600;color:${b.color}">${b.name}</div><div style="font-size:10px;color:var(--text3)">${pic?pic.nama:'—'}</div></div><button class="btn btn-sm" onclick="viewBrand('${bid}')">Lihat →</button></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--red)">${k}</div><div style="font-size:9px;color:var(--text3)">Kritis</div></div><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--orange)">${r}</div><div style="font-size:9px;color:var(--text3)">Reorder</div></div><div style="text-align:center;background:var(--bg3);border-radius:var(--r);padding:5px"><div class="mono" style="font-size:15px;font-weight:600;color:var(--green)">${a}</div><div style="font-size:9px;color:var(--text3)">Aman</div></div></div></div>`;}).join('');
+  const alerts=[];bids.forEach(bid=>{allFlat(bid).forEach(it=>{const[s,c]=statusItem(bid,it.cat,it.nama);if(c==='b-danger'||c==='b-warn')alerts.push({bid,...it,s,c});});});
+  $('hq-alert-tbl').innerHTML=alerts.length?alerts.map(it=>{const avg=R(avgKeluar7(it.bid,it.cat,it.nama));const h=avg>0?R(it.stok/avg,1):null;return`<tr><td><span class="badge" style="color:${DB.brands[it.bid].color}">${DB.brands[it.bid].name}</span></td><td>${it.nama}</td><td><span class="badge b-blue">${it.cat}</span></td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${it.c}">${it.s}</span></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Semua brand aman</td></tr>';
+}
+function viewBrand(bid){SESSION.brandId=bid;refreshSidebar();buildStokTabs();buildCatDropdowns();goto('stok');}
+function renderHQBrands(){
+  const bids=Object.keys(DB.brands);
+  const chips=$('hq-brand-chips');
+  chips.innerHTML=bids.map((bid,i)=>`<div class="tab${i===0?' active':''}" id="chip-${bid}" onclick="selectHQBrand('${bid}')" style="${i===0?'color:'+DB.brands[bid].color+';background:'+DB.brands[bid].color+'14;border-color:'+DB.brands[bid].color+'66':''}">${DB.brands[bid].name}</div>`).join('');
+  selectHQBrand(bids[0]);
+}
+function selectHQBrand(bid){
+  document.querySelectorAll('#hq-brand-chips .tab').forEach(c=>{c.classList.remove('active');c.style.cssText='';});
+  const chip=$('chip-'+bid);if(chip){chip.classList.add('active');chip.style.color=DB.brands[bid].color;chip.style.background=DB.brands[bid].color+'14';chip.style.borderColor=DB.brands[bid].color+'66';}
+  SESSION.brandId=bid;
+  const t=today(),s7=addD(t,-7);
+  const detail=$('hq-brand-detail');
+  detail.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">${CATS.map(cat=>{const items=bItems(bid)[cat]||[];const k=items.filter(i=>statusItem(bid,cat,i.nama)[1]==='b-danger').length;return`<div class="card"><div class="card-header"><span class="card-title">${cat}</span><span class="mono" style="font-size:10px;color:var(--text3)">${items.length} item${k>0?` · <span style="color:var(--red)">${k} kritis</span>`:''}</span></div><table class="tbl"><thead><tr><th>Nama</th><th>Stok</th><th>Bertahan</th><th>Status</th></tr></thead><tbody>${items.map(it=>{const avg=avgKeluar(bid,cat,it.nama,s7,t);const h=avg>0?R(it.stok/avg,1):null;const[s,c]=statusItem(bid,cat,it.nama);return`<tr><td>${it.nama}</td><td class="mono">${it.stok} ${it.satuan}</td><td class="mono ${h&&h<3?'tag-r':h&&h<7?'tag-o':'tag-g'}">${h!==null?h+' hr':'—'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;}).join('')||'<tr><td colspan="4" class="empty">Kosong</td></tr>'}</tbody></table></div>`;}).join('')}</div>`;
+}
+function renderHQTransfer(){
+  const all=DB.transferLog||[];
+  const pend=all.filter(t=>t.status==='Pending').length,app=all.filter(t=>t.status==='Approved').length,rej=all.filter(t=>t.status==='Rejected').length;
+  $('hqt-pend').textContent=pend;$('hqt-app').textContent=app;$('hqt-rej').textContent=rej;
+  const bids=Object.keys(DB.brands);
+  $('hqt-from').innerHTML=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
+  $('hqt-to').innerHTML=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
+  $('hqt-tbl').innerHTML=[...all].reverse().map((t,ri)=>{const idx=all.length-1-ri;const sc=t.status==='Approved'?'b-ok':t.status==='Rejected'?'b-danger':'b-warn';return`<tr><td class="mono" style="font-size:10px">${fmtD(t.tgl)}</td><td style="font-size:10px">${t.reqBy}</td><td><span class="badge" style="color:${DB.brands[t.fromBrand]?.color||'var(--text2)'}">${DB.brands[t.fromBrand]?.name}</span></td><td><span class="badge" style="color:${DB.brands[t.toBrand]?.color||'var(--text2)'}">${DB.brands[t.toBrand]?.name}</span></td><td>${t.item}</td><td class="mono">${t.qty} ${t.satuan}</td><td style="color:var(--text3);font-size:10px">${t.alasan||'-'}</td><td><span class="badge ${sc}">${t.status}</span></td><td>${t.status==='Pending'?`<div class="flex-row" style="gap:4px"><button class="btn btn-sm" style="color:var(--green)" onclick="approveTransfer(${idx})">OK</button><button class="btn btn-sm btn-danger" onclick="rejectTransfer(${idx})">Tolak</button></div>`:'-'}</td></tr>`;}).join('')||'<tr><td colspan="9" class="empty">Belum ada transfer</td></tr>';
+}
+function submitTransferHQ(){
+  const from=$('hqt-from').value,to=$('hqt-to').value;
+  if(from===to)return alert('Brand asal dan tujuan tidak boleh sama');
+  const item=$('hqt-item').value.trim(),qty=parseFloat($('hqt-qty').value)||0,satuan=$('hqt-sat').value,note=$('hqt-note').value.trim();
+  if(!item||qty<=0)return alert('Isi item dan jumlah');
+  const idx=DB.transferLog.length;
+  DB.transferLog.push({ts:new Date().toISOString(),tgl:today(),fromBrand:from,toBrand:to,item,qty,satuan,alasan:note||'Transfer oleh Admin',status:'Pending',reqBy:SESSION.user.username});
+  closeModal('modal-tr-hq');
+  approveTransfer(idx);renderHQTransfer();renderHQDash();
+}
+function renderHQSDM(){
+  const bids=Object.keys(DB.brands);
+  const chips=$('hq-sdm-chips');
+  chips.innerHTML=bids.map((bid,i)=>`<div class="tab${i===0?' active':''}" id="sdm-chip-${bid}" onclick="selectHQSDMBrand('${bid}')" style="${i===0?'color:'+DB.brands[bid].color+';background:'+DB.brands[bid].color+'14;border-color:'+DB.brands[bid].color+'66':''}">${DB.brands[bid].name}</div>`).join('');
+  selectHQSDMBrand(bids[0]);
+}
+function selectHQSDMBrand(bid){
+  document.querySelectorAll('#hq-sdm-chips .tab').forEach(c=>{c.classList.remove('active');c.style.cssText='';});
+  const chip=$('sdm-chip-'+bid);if(chip){chip.classList.add('active');chip.style.color=DB.brands[bid].color;chip.style.background=DB.brands[bid].color+'14';chip.style.borderColor=DB.brands[bid].color+'66';}
+  const sdms=DB.sdm[bid]||[];const posisis=DB.posisi[bid]||[];const shifts=DB.shifts[bid]||[];
+  const detail=$('hq-sdm-detail');
+  if(!sdms.length){detail.innerHTML='<div class="empty" style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rl)">Belum ada karyawan terdaftar di brand ini</div>';return;}
+  detail.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">${sdms.map(k=>{const p=posisis.find(p=>p.nama===k.posisi);const pct=p&&p.target>0?Math.round(k.aktual/p.target*100):0;const col=pct>=100?'var(--green)':pct>=80?'var(--orange)':'var(--red)';return`<div class="kpi-card"><div class="kpi-name">${k.nama}</div><div class="kpi-meta">${k.posisi} · ${k.shift}</div><div class="kpi-row" style="margin-top:.5rem"><span style="color:var(--text3)">Aktual</span><span class="mono">${k.aktual} ${k.satuanHasil||''}</span></div><div class="kpi-row"><span style="color:var(--text3)">Target</span><span class="mono">${p?p.target+' '+p.satuan:'-'}</span></div><div class="kpi-row"><span style="color:var(--text3)">KPI</span><span class="kpi-pct" style="color:${col}">${pct}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div></div>`;}).join('')}</div>`;
+}
+function renderUsers(){
+  const bids=Object.keys(DB.brands);
+  $('nu-brand').innerHTML=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
+  $('tbl-users').innerHTML=DB.users.map((u,i)=>`<tr><td class="mono">${u.username}</td><td>${u.nama}</td><td><span class="badge ${u.role==='admin'?'b-purple':'b-blue'}">${u.role==='admin'?'Admin HQ':'PIC'}</span></td><td>${u.brand?DB.brands[u.brand]?.name||u.brand:'-'}</td><td><span class="badge ${u.active?'b-ok':'b-danger'}">${u.active?'Aktif':'Nonaktif'}</span></td><td class="flex-row" style="gap:4px"><button class="btn btn-sm" onclick="toggleUser(${i})">${u.active?'Nonaktifkan':'Aktifkan'}</button><button class="btn btn-sm btn-danger" onclick="resetPass(${i})">Reset Pass</button></td></tr>`).join('');
+}
+function toggleNuBrand(){$('nu-brand-wrap').style.display=$('nu-role').value==='admin'?'none':'block';}
+function submitAddUser(){
+  const username=$('nu-user').value.trim(),password=$('nu-pass').value,nama=$('nu-nama').value.trim(),role=$('nu-role').value,brand=role==='admin'?null:$('nu-brand').value;
+  if(!username||!password||!nama)return alert('Isi semua field');
+  if(DB.users.find(u=>u.username===username))return alert('Username sudah ada');
+  DB.users.push({username,password,nama,role,brand,active:true});
+  closeModal('modal-add-user');renderUsers();
+}
+function toggleUser(i){DB.users[i].active=!DB.users[i].active;renderUsers();}
+function resetPass(i){const p=prompt('Password baru untuk '+DB.users[i].username+':');if(p){DB.users[i].password=p;alert('Password berhasil direset');}}
+function populateBrandDropdowns(){
+  const bids=Object.keys(DB.brands);const opts=bids.map(id=>`<option value="${id}">${DB.brands[id].name}</option>`).join('');
+  ['hqt-from','hqt-to','nb-pic'].forEach(id=>{const el=$(id);if(el)el.innerHTML=id==='nb-pic'?'<option value="">Pilih user...</option>'+DB.users.filter(u=>u.role==='pic').map(u=>`<option value="${u.username}">${u.nama}</option>`).join(''):opts;});
+  $('nb-pic').innerHTML='<option value="">Pilih user (opsional)</option>'+DB.users.filter(u=>u.role==='pic').map(u=>`<option value="${u.username}">${u.nama} (${u.username})</option>`).join('');
+}
+function initBrandAdd(){populateBrandDropdowns();}
+function submitNewBrand(){
+  const nama=$('nb-nama').value.trim(),color=$('nb-color').value,picU=$('nb-pic').value;
+  if(!nama)return alert('Nama brand wajib diisi');
+  const bid='brand'+Date.now().toString().slice(-6);
+  DB.brands[bid]={name:nama,color,items:{'Bahan Baku':[],'Saus':[],'Bumbu':[],'Kemasan':[],'Perlengkapan':[]}};
+  DB.keluarLog[bid]=[];DB.masukLog[bid]=[];DB.wasteLog[bid]=[];DB.orderLog[bid]=[];DB.resep[bid]=[];DB.sdm[bid]=[];
+  DB.posisi[bid]=[{nama:'Operator Produksi',target:50,satuan:'porsi'},{nama:'Supervisor',target:60,satuan:'porsi'}];
+  DB.shifts[bid]=[{nama:'Pagi',start:'06:00',end:'14:00'},{nama:'Sore',start:'14:00',end:'22:00'},{nama:'Malam',start:'22:00',end:'06:00'}];
+  if(picU){const user=DB.users.find(u=>u.username===picU);if(user)user.brand=bid;}
+  populateBrandDropdowns();
+  alert(`Brand "${nama}" berhasil dibuat!`);$('nb-nama').value='';
+}
+
+// ─ Fix posisi & shift modal open handlers ─
+document.querySelectorAll('button[onclick*="modal-posisi-mgr"], button[onclick*="modal-shift-mgr"]').forEach(btn=>{
+  const id=btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+  btn.addEventListener('click',()=>{if(id==='modal-posisi-mgr')renderPosisiTable();else renderShiftTable();});
+});
+function loadCompanyPage(){
+  $('comp-name').value = DB.company.name;
+
+  const sel = $('comp-brand-select');
+  sel.innerHTML = '';
+  Object.keys(DB.brands).forEach(b=>{
+    const opt = document.createElement('option');
+    opt.value = b;
+    opt.textContent = DB.brands[b].name;
+    sel.appendChild(opt);
+  });
+
+  $('comp-logo-preview').src = DB.company.logo || '';
+}
+
+function saveCompany(){
+  // nama perusahaan
+  DB.company.name = $('comp-name').value;
+
+  // update label
+  $('comp-name-label').textContent = DB.company.name;
+
+  // ubah nama brand
+  const bid = $('comp-brand-select').value;
+  const newName = $('comp-brand-name').value;
+  if(newName){
+    DB.brands[bid].name = newName;
+  }
+
+  // logo upload
+  const file = $('comp-logo').files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      DB.company.logo = e.target.result;
+      $('comp-logo-img').src = DB.company.logo;
+      $('comp-logo-preview').src = DB.company.logo;
+    }
+    reader.readAsDataURL(file);
+  }
+
+  refreshSidebar();
+  alert('Perubahan disimpan');
+}
+
+
+</script>
+</body>
+</html>
