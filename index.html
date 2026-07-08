@@ -162,6 +162,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
     <div class="nav-item" onclick="goto('stok-masuk')"><span class="nav-icon">↑</span>Stok Masuk</div>
     <div class="nav-item" onclick="goto('stok')"><span class="nav-icon">▦</span>Stok & Inventori</div>
     <div class="nav-item" onclick="goto('keluar')"><span class="nav-icon">↓</span>Stok Keluar Harian</div>
+    <div class="nav-item" onclick="goto('batch')"><span class="nav-icon">⏳</span>Batch & Kadaluarsa <span id="batch-notif"></span></div>
     <div class="nav-item" onclick="goto('waste')"><span class="nav-icon">⚠</span>Waste Harian</div>
     <div class="nav-item" onclick="goto('order-list')"><span class="nav-icon">📋</span>List Order & Rekomendasi</div>
     <div class="nav-item" onclick="goto('estimasi')"><span class="nav-icon">◷</span>Estimasi Bertahan</div>
@@ -195,6 +196,7 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
     <div class="metric m-g"><div class="metric-label">Total Item</div><div class="metric-value" id="db-total">0</div></div>
     <div class="metric m-a"><div class="metric-label">Waste Hari Ini</div><div class="metric-value" id="db-waste">0</div></div>
     <div class="metric m-b"><div class="metric-label">Transfer Pending</div><div class="metric-value" id="db-tr-pending">0</div></div>
+    <div class="metric m-d"><div class="metric-label">Batch Akan/Sudah Expired</div><div class="metric-value" id="db-expiring">0</div></div>
   </div>
   <div class="sec-title">Alert Stok</div>
   <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Item</th><th>Kategori</th><th>Stok</th><th>Avg/Hari</th><th>Bertahan</th><th>Status</th></tr></thead><tbody id="db-alert-tbl"></tbody></table></div>
@@ -213,14 +215,16 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
         <div class="ff"><label>Item</label><select id="sm-item"></select></div>
         <div class="ff"><label>Jumlah</label><input type="number" id="sm-qty" placeholder="0" min="0" step="0.01"/></div>
         <div class="ff"><label>Satuan (otomatis)</label><input type="text" id="sm-satuan" readonly style="opacity:.5"/></div>
+        <div class="ff"><label>Tanggal Expired</label><input type="date" id="sm-exp"/></div>
         <div class="ff"><label>Supplier</label><input type="text" id="sm-sup" placeholder="Nama supplier"/></div>
         <div class="ff" style="grid-column:1/-1"><label>Catatan</label><input type="text" id="sm-note" placeholder="Opsional"/></div>
       </div>
+      <div style="font-size:10px;color:var(--text3);margin:-4px 0 8px">Kosongkan Tanggal Expired jika item tidak punya masa kadaluarsa. Batch ini otomatis dipakai duluan saat expired-nya paling dekat (FEFO).</div>
       <button class="btn btn-accent" onclick="submitStokMasuk()">✓ Simpan Stok Masuk</button>
     </div>
   </div>
   <div class="sec-title">Riwayat Stok Masuk</div>
-  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Supplier</th><th>Catatan</th></tr></thead><tbody id="tbl-masuk-log"></tbody></table></div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Expired</th><th>Supplier</th><th>Catatan</th></tr></thead><tbody id="tbl-masuk-log"></tbody></table></div>
 </div>
 
 <!-- STOK -->
@@ -241,7 +245,22 @@ body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-s
     <div id="keluar-body"></div>
   </div>
   <div class="sec-title">Riwayat Keluar</div>
-  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Alasan</th></tr></thead><tbody id="tbl-keluar-log"></tbody></table></div>
+  <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Item</th><th>Qty</th><th>Alasan</th><th>Batch Terpakai (FEFO)</th></tr></thead><tbody id="tbl-keluar-log"></tbody></table></div>
+</div>
+
+<!-- BATCH & KADALUARSA -->
+<div id="page-batch" class="page">
+  <div class="metrics">
+    <div class="metric m-d"><div class="metric-label">Batch Expired</div><div class="metric-value" id="bt-expired">0</div></div>
+    <div class="metric m-w"><div class="metric-label">Segera Expired (≤7 hr)</div><div class="metric-value" id="bt-soon">0</div></div>
+    <div class="metric m-g"><div class="metric-label">Batch Aman</div><div class="metric-value" id="bt-safe">0</div></div>
+    <div class="metric m-a"><div class="metric-label">Total Batch Tersedia</div><div class="metric-value" id="bt-total">0</div></div>
+  </div>
+  <div class="sec-title">Alert Kadaluarsa</div>
+  <div class="card" style="overflow-x:auto;margin-bottom:1rem"><table class="tbl"><thead><tr><th>Item</th><th>Kategori</th><th>Sisa Qty</th><th>Tgl Expired</th><th>Sisa Hari</th><th>Status</th></tr></thead><tbody id="bt-alert-tbl"></tbody></table></div>
+  <div class="sec-title">Histori & Estimasi Ketersediaan Stok per Batch (Urutan FEFO)</div>
+  <div class="tabs" id="batch-tabs"></div>
+  <div id="batch-tab-contents"></div>
 </div>
 
 <!-- WASTE -->
@@ -722,7 +741,50 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const STATE_ROW_ID = 'main';
 
 const sbConfigured = !SUPABASE_URL.includes('YOUR_SUPABASE_URL') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
-const sb = sbConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// Fetch kustom untuk Supabase client.
+// Beberapa environment preview/sandbox (mis. iframe about:srcdoc) menimpa window.fetch
+// dengan proxy yang mengirim request lewat postMessage ke parent frame. Objek Headers
+// bawaan browser tidak bisa di-structured-clone lewat postMessage, sehingga muncul error:
+// "DataCloneError: Failed to execute 'postMessage' ... Headers object could not be cloned".
+// Solusinya: ratakan (flatten) headers jadi plain object biasa sebelum diteruskan ke fetch,
+// supaya tidak ada instance Headers yang perlu di-clone oleh proxy tersebut.
+function sbSafeFetch(input, init){
+  init = init ? { ...init } : {};
+  if(init.headers){
+    const plain = {};
+    if(typeof Headers !== 'undefined' && init.headers instanceof Headers){
+      init.headers.forEach((v,k)=>{ plain[k]=v; });
+    }else if(Array.isArray(init.headers)){
+      init.headers.forEach(([k,v])=>{ plain[k]=v; });
+    }else{
+      Object.assign(plain, init.headers);
+    }
+    init.headers = plain;
+  }
+  // Kalau input berupa objek Request (bukan string URL), ambil url & gabungkan headernya juga
+  if(typeof input !== 'string' && input && input.url){
+    if(typeof Headers !== 'undefined' && input.headers instanceof Headers){
+      input.headers.forEach((v,k)=>{ init.headers = init.headers||{}; if(!(k in init.headers)) init.headers[k]=v; });
+    }
+    input = input.url;
+  }
+  return window.fetch(input, init);
+}
+
+const sb = sbConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: sbSafeFetch } }) : null;
+
+// Supabase (PostgREST) mengembalikan objek error {message, details, hint, code}.
+// Kalau langsung digabung ke string ("Gagal: "+error) atau dilog di console yang
+// men-stringify objek, hasilnya jadi "[object Object]". Fungsi ini memastikan
+// selalu ada teks yang bisa dibaca manusia, apa pun bentuk error-nya.
+function describeSbError(err){
+  if(!err) return 'Error tidak diketahui';
+  if(typeof err === 'string') return err;
+  const parts = [err.message, err.details, err.hint, err.code ? ('code: '+err.code) : null].filter(Boolean);
+  if(parts.length) return parts.join(' — ');
+  try{ return JSON.stringify(err); }catch(e){ return String(err); }
+}
 
 let syncReady = false;
 let saveTimer = null;
@@ -749,7 +811,7 @@ async function saveStateToSupabase(){
     const payload = JSON.parse(JSON.stringify(rawDB));
     const { error } = await sb.from('app_state').upsert({ id: STATE_ROW_ID, data: payload, updated_at: new Date().toISOString() });
     setSyncStatus(error ? 'error' : 'saved');
-    if(error) console.error('Supabase save error:', error);
+    if(error) console.error('Supabase save error:', describeSbError(error), error);
   }catch(e){
     console.error('Supabase save exception:', e);
     setSyncStatus('error');
@@ -801,8 +863,11 @@ async function initSupabaseSync(){
     const { data, error } = await sb.from('app_state').select('data').eq('id', STATE_ROW_ID).maybeSingle();
 
     if(error){
-      console.error('Supabase select error:', error);
-      if(msgEl){ msgEl.textContent='Gagal load: '+error.message; msgEl.style.color='var(--red)'; }
+      console.error('Supabase select error:', describeSbError(error), error);
+      let hint = '';
+      if(error.code==='42P01') hint = ' → Tabel "app_state" belum ada. Jalankan SQL setup di Supabase SQL Editor.';
+      else if(error.code==='42501' || /permission|policy/i.test(error.message||'')) hint = ' → Izin akses (RLS policy) untuk role anon belum diatur. Jalankan SQL setup.';
+      if(msgEl){ msgEl.textContent='Gagal load: '+describeSbError(error)+hint; msgEl.style.color='var(--red)'; }
     }else if(data && data.data){
       Object.keys(rawDB).forEach(k=>delete rawDB[k]);
       Object.assign(rawDB, data.data);
@@ -810,15 +875,15 @@ async function initSupabaseSync(){
     }else{
       const { error: insErr } = await sb.from('app_state').insert({ id: STATE_ROW_ID, data: JSON.parse(JSON.stringify(rawDB)), updated_at: new Date().toISOString() });
       if(insErr){
-        console.error('Supabase insert error:', insErr);
-        if(msgEl){ msgEl.textContent='Gagal buat data awal: '+insErr.message; msgEl.style.color='var(--red)'; }
+        console.error('Supabase insert error:', describeSbError(insErr), insErr);
+        if(msgEl){ msgEl.textContent='Gagal buat data awal: '+describeSbError(insErr); msgEl.style.color='var(--red)'; }
       }else{
         if(msgEl){ msgEl.textContent='Database awal berhasil dibuat di Supabase.'; msgEl.style.color='var(--green)'; }
       }
     }
   }catch(e){
     console.error('Supabase load exception:', e);
-    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase: '+e.message; msgEl.style.color='var(--red)'; }
+    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase: '+(e&&e.message?e.message:describeSbError(e)); msgEl.style.color='var(--red)'; }
   }
 
   userInput.disabled = false; passInput.disabled = false;
@@ -839,6 +904,81 @@ function addD(s,n){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);retu
 function R(n,d=2){return isFinite(n)&&n!==null?parseFloat(n.toFixed(d)):0;}
 function bItems(bid){return DB.brands[bid]?.items||{};}
 function allFlat(bid){return Object.entries(bItems(bid)).flatMap(([cat,items])=>items.map(i=>({...i,cat})));}
+
+// ═══════════════════════════════════════════════════
+// BATCH / EXPIRED (FIFO / FEFO)
+// ═══════════════════════════════════════════════════
+// Setiap item punya it.batches = [{id, tglMasuk, tglExp(atau null), qty(awal), sisa, supplier, catatan}]
+function genBatchId(){return 'bt'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+// Tambah batch baru saat barang datang (stok masuk / order tiba / terima transfer)
+function tambahBatch(it, tglMasuk, tglExp, qty, supplier, catatan){
+  if(!Array.isArray(it.batches)) it.batches=[];
+  if(qty<=0) return null;
+  const b={id:genBatchId(), tglMasuk:tglMasuk||today(), tglExp:tglExp||null, qty:R(qty), sisa:R(qty), supplier:supplier||'', catatan:catatan||''};
+  it.batches.push(b);
+  return b;
+}
+
+// Ambil status 1 batch berdasarkan tanggal expired: [label, badgeClass, sisaHari]
+function batchStatus(tglExp){
+  if(!tglExp) return ['Tanpa Expired','b-gray',null];
+  const sisaHari=Math.ceil((new Date(tglExp+'T00:00:00')-new Date(today()+'T00:00:00'))/86400000);
+  if(sisaHari<0) return ['Expired','b-danger',sisaHari];
+  if(sisaHari<=7) return ['Segera Expired','b-warn',sisaHari];
+  return ['Aman','b-ok',sisaHari];
+}
+
+// Konsumsi stok keluar dengan FEFO (First Expired First Out), fallback FIFO (First In First Out)
+// jika tanggal expired sama / tidak ada. Mengurangi it.sisa pada tiap batch dan mengembalikan
+// rincian batch yang terpakai untuk kebutuhan histori/log.
+function konsumsiFEFO(it, qtyButuh){
+  if(!Array.isArray(it.batches)) it.batches=[];
+  const avail=it.batches.filter(b=>b.sisa>0.00001);
+  avail.sort((a,b)=>{
+    const ea=a.tglExp||'9999-12-31', eb=b.tglExp||'9999-12-31';
+    if(ea!==eb) return ea<eb?-1:1;
+    return (a.tglMasuk||'')<(b.tglMasuk||'')?-1:1;
+  });
+  let sisa=qtyButuh, dipakai=[];
+  for(const b of avail){
+    if(sisa<=0.00001) break;
+    const ambil=R(Math.min(b.sisa,sisa));
+    b.sisa=R(b.sisa-ambil);
+    sisa=R(sisa-ambil);
+    dipakai.push({batchId:b.id,tglMasuk:b.tglMasuk,tglExp:b.tglExp,qty:ambil});
+  }
+  // Jika stok tercatat lebih besar dari total batch (data lama tanpa batch), sisanya
+  // dianggap dari batch "tanpa histori" agar qty keluar tetap tercatat konsisten.
+  if(sisa>0.00001){
+    dipakai.push({batchId:null,tglMasuk:null,tglExp:null,qty:R(sisa)});
+  }
+  return dipakai;
+}
+
+// Ringkas rincian batch terpakai jadi teks singkat, mis: "3kg (Exp 12 Jul 2026), 2kg (FIFO lama)"
+function fmtBatchDipakai(dipakai,satuan){
+  if(!dipakai||!dipakai.length) return '-';
+  return dipakai.map(d=>{
+    const label=d.tglExp?`Exp ${fmtD(d.tglExp)}`:(d.batchId?'Tanpa Expired':'Stok lama');
+    return `${d.qty} ${satuan} (${label})`;
+  }).join(', ');
+}
+
+// Pastikan semua item minimal punya array batches (backward-compatible utk data lama)
+function pastikanBatchAwal(){
+  Object.keys(DB.brands).forEach(bid=>{
+    const items=bItems(bid);
+    Object.keys(items).forEach(cat=>{
+      (items[cat]||[]).forEach(it=>{
+        if(!Array.isArray(it.batches)){
+          it.batches=[];
+          if(it.stok>0) tambahBatch(it, today(), null, it.stok, '', 'Saldo awal (migrasi)');
+        }
+      });
+    });
+  });
+}
 
 // avg keluar dalam rentang tanggal
 function avgKeluar(bid,cat,nama,startStr,endStr){
@@ -908,6 +1048,7 @@ $('l-user').addEventListener('keydown',e=>{if(e.key==='Enter')$('l-pass').focus(
 // ═══════════════════════════════════════════════════
 function initApp(){
   const u=SESSION.user;
+  pastikanBatchAwal();
   $('sf-user').textContent=u.nama;
   $('comp-name-label').textContent = DB.company.name;
   if(DB.company.logo){
@@ -946,7 +1087,7 @@ function refreshSidebar(){
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-const PAGE_TITLES={'dashboard':'Dashboard','stok-masuk':'Stok Masuk','stok':'Stok & Inventori','keluar':'Input Stok Keluar Harian','waste':'Waste Harian','order-list':'List Order & Rekomendasi','estimasi':'Estimasi Bertahan','resep':'Resep & Formula','transfer':'Transfer Stok','sdm':'SDM & KPI','laporan':'Laporan Harian','hq-dash':'Dashboard HQ','hq-brands':'Stok Semua Brand','hq-transfer':'Kelola Transfer','hq-sdm':'SDM Semua Brand','hq-users':'Kelola Akun','hq-brand-add':'Tambah Brand Baru'};
+const PAGE_TITLES={'dashboard':'Dashboard','stok-masuk':'Stok Masuk','stok':'Stok & Inventori','keluar':'Input Stok Keluar Harian','batch':'Batch & Kadaluarsa (FIFO/FEFO)','waste':'Waste Harian','order-list':'List Order & Rekomendasi','estimasi':'Estimasi Bertahan','resep':'Resep & Formula','transfer':'Transfer Stok','sdm':'SDM & KPI','laporan':'Laporan Harian','hq-dash':'Dashboard HQ','hq-brands':'Stok Semua Brand','hq-transfer':'Kelola Transfer','hq-sdm':'SDM Semua Brand','hq-users':'Kelola Akun','hq-brand-add':'Tambah Brand Baru'};
 
 function goto(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -967,7 +1108,7 @@ function goto(id){
 
   const map = {
     dashboard:renderDashboard, 'stok-masuk':renderStokMasukPage, stok:renderStokPage, 
-    keluar:renderKeluar, waste:renderWastePage, ['order-list']:renderOrderList, 
+    keluar:renderKeluar, batch:renderBatchPage, waste:renderWastePage, ['order-list']:renderOrderList, 
     estimasi:renderEstimasi, resep:renderResep, transfer:renderTransfer, 
     sdm:renderSDM, laporan:renderLaporan, 'hq-dash':renderHQDash, 
     'hq-brands':renderHQBrands, 'hq-transfer':renderHQTransfer, 'hq-sdm':renderHQSDM, 
@@ -998,6 +1139,12 @@ function updateNotifs(){
   const pAll=(DB.transferLog||[]).filter(t=>t.status==='Pending').length;
   const d1=$('brand-tr-notif');if(d1)d1.innerHTML=pIn>0?`<span class="notif-dot"></span>`:'';
   const d2=$('hq-tr-notif');if(d2)d2.innerHTML=pAll>0?`<span class="notif-dot"></span>`:'';
+
+  const d3=$('batch-notif');
+  if(d3 && bid){
+    const adaMasalah=allFlat(bid).some(it=>(it.batches||[]).some(b=>b.sisa>0.00001 && batchStatus(b.tglExp)[1]!=='b-ok' && batchStatus(b.tglExp)[1]!=='b-gray'));
+    d3.innerHTML=adaMasalah?`<span class="notif-dot"></span>`:'';
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1021,6 +1168,77 @@ function buildStokTabs(){
     contents.appendChild(tc);
   });
   renderStokTable(bid,'Bahan Baku','stbl-Bahan_Baku');
+}
+
+// ═══════════════════════════════════════════════════
+// BATCH & KADALUARSA PAGE (Histori & Estimasi Ketersediaan Stok)
+// ═══════════════════════════════════════════════════
+function renderBatchPage(){
+  const bid=SESSION.brandId;
+  buildBatchTabs();
+
+  // Ringkasan & alert lintas kategori
+  let expiredN=0,soonN=0,safeN=0,totalN=0;
+  const alertRows=[];
+  allFlat(bid).forEach(it=>{
+    const batches=(it.batches||[]).filter(b=>b.sisa>0.00001);
+    batches.forEach(b=>{
+      totalN++;
+      const[s,c,hari]=batchStatus(b.tglExp);
+      if(c==='b-danger')expiredN++;else if(c==='b-warn')soonN++;else safeN++;
+      if(c==='b-danger'||c==='b-warn'){
+        alertRows.push({nama:it.nama,cat:it.cat,sisa:b.sisa,satuan:it.satuan,exp:b.tglExp,s,c,hari});
+      }
+    });
+  });
+  alertRows.sort((a,b)=>(a.exp||'9999')<(b.exp||'9999')?-1:1);
+
+  $('bt-expired').textContent=expiredN;
+  $('bt-soon').textContent=soonN;
+  $('bt-safe').textContent=safeN;
+  $('bt-total').textContent=totalN;
+  $('bt-alert-tbl').innerHTML=alertRows.length?alertRows.map(r=>`<tr><td>${r.nama}</td><td><span class="badge b-blue">${r.cat}</span></td><td class="mono">${r.sisa} ${r.satuan}</td><td class="mono">${fmtD(r.exp)}</td><td class="mono ${r.c==='b-danger'?'tag-r':'tag-o'}">${r.hari}${r.hari<0?' hr (lewat)':' hr'}</td><td><span class="badge ${r.c}">${r.s}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Tidak ada batch yang expired / mendekati expired</td></tr>';
+}
+
+function buildBatchTabs(){
+  const bid=SESSION.brandId;
+  const wrap=$('batch-tabs'),contents=$('batch-tab-contents');
+  if(!wrap||!contents)return;
+  wrap.innerHTML='';contents.innerHTML='';
+  CATS.forEach((cat,i)=>{
+    const tab=document.createElement('div');
+    tab.className='tab'+(i===0?' active':'');
+    tab.textContent=cat;
+    const tid='btab-'+i;
+    tab.onclick=()=>{switchTab(tab,'batch',tid);renderBatchTable(bid,cat,'bbtbl-'+cat.replace(/ /g,'_'));};
+    wrap.appendChild(tab);
+    const tc=document.createElement('div');
+    tc.id=tid;tc.className='tab-content'+(i===0?' active':'');
+    tc.innerHTML=`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Item</th><th>Tgl Masuk</th><th>Tgl Expired</th><th>Sisa Qty</th><th>Asal/Supplier</th><th>Sisa Hari</th><th>Status</th></tr></thead><tbody id="bbtbl-${cat.replace(/ /g,'_')}"></tbody></table></div>`;
+    contents.appendChild(tc);
+  });
+  renderBatchTable(bid,'Bahan Baku','bbtbl-Bahan_Baku');
+}
+
+function renderBatchTable(bid,cat,tbodyId){
+  const el=$(tbodyId);if(!el)return;
+  const items=bItems(bid)[cat]||[];
+  // Kumpulkan semua batch dari semua item di kategori ini, urut FEFO (expired paling dekat duluan)
+  let rows=[];
+  items.forEach(it=>{
+    (it.batches||[]).filter(b=>b.sisa>0.00001).forEach(b=>{
+      rows.push({nama:it.nama,satuan:it.satuan,...b});
+    });
+  });
+  rows.sort((a,b)=>{
+    const ea=a.tglExp||'9999-12-31', eb=b.tglExp||'9999-12-31';
+    if(ea!==eb) return ea<eb?-1:1;
+    return (a.tglMasuk||'')<(b.tglMasuk||'')?-1:1;
+  });
+  el.innerHTML=rows.length?rows.map(r=>{
+    const[s,c,hari]=batchStatus(r.tglExp);
+    return `<tr><td>${r.nama}</td><td class="mono" style="font-size:10px">${fmtD(r.tglMasuk)}</td><td class="mono" style="font-size:10px">${r.tglExp?fmtD(r.tglExp):'-'}</td><td class="mono">${r.sisa} ${r.satuan}</td><td style="color:var(--text3)">${r.supplier||r.catatan||'-'}</td><td class="mono ${hari===null?'':hari<0?'tag-r':hari<=7?'tag-o':'tag-g'}">${hari===null?'—':hari+' hr'}</td><td><span class="badge ${c}">${s}</span></td></tr>`;
+  }).join(''):'<tr><td colspan="7" class="empty">Belum ada batch tersedia di kategori ini</td></tr>';
 }
 
 function buildCatDropdowns(){
@@ -1054,6 +1272,7 @@ function renderDashboard(){
   $('db-total').textContent=all.length;
   $('db-waste').textContent=(DB.wasteLog[bid]||[]).filter(w=>w.tgl===t).length;
   $('db-tr-pending').textContent=(DB.transferLog||[]).filter(tr=>tr.fromBrand===bid&&tr.status==='Pending').length;
+  $('db-expiring').textContent=all.reduce((n,it)=>n+(it.batches||[]).filter(b=>b.sisa>0.00001&&['b-warn','b-danger'].includes(batchStatus(b.tglExp)[1])).length,0);
   
   const atbl=$('db-alert-tbl');
   atbl.innerHTML=alerts.length?alerts.map(it=>{
@@ -1095,24 +1314,29 @@ function renderStokMasukPage(){
 function submitStokMasuk(){
   const bid=SESSION.brandId;
   const tgl=$('sm-tgl').value||today(),cat=$('sm-cat').value,nama=$('sm-item').value;
-  const qty=parseFloat($('sm-qty').value)||0,sup=$('sm-sup').value,note=$('sm-note').value;
+  const qty=parseFloat($('sm-qty').value)||0,exp=$('sm-exp').value||null,sup=$('sm-sup').value,note=$('sm-note').value;
   if(qty<=0)return alert('Jumlah harus lebih dari 0');
   const it=bItems(bid)[cat]?.find(i=>i.nama===nama);
   if(!it)return;
+  if(exp && exp<tgl){if(!confirm('Tanggal expired lebih awal dari tanggal masuk. Tetap simpan?'))return;}
   it.stok=R(it.stok+qty);
   
   // TODO: Supabase implementation (contoh)
   // supabase.from('stok_masuk_log').insert([...])
   
-  DB.masukLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama,qty,satuan:it.satuan,supplier:sup,catatan:note});
-  $('sm-qty').value='';$('sm-sup').value='';$('sm-note').value='';
+  tambahBatch(it,tgl,exp,qty,sup,note);
+  DB.masukLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama,qty,satuan:it.satuan,exp,supplier:sup,catatan:note});
+  $('sm-qty').value='';$('sm-exp').value='';$('sm-sup').value='';$('sm-note').value='';
   renderMasukLog();renderDashboard();
-  alert(`✓ Stok masuk: ${nama} +${qty} ${it.satuan}`);
+  alert(`✓ Stok masuk: ${nama} +${qty} ${it.satuan}${exp?' (Exp '+fmtD(exp)+')':''}`);
 }
 function renderMasukLog(){
   const bid=SESSION.brandId;
   const logs=[...DB.masukLog[bid]||[]].reverse().slice(0,50);
-  $('tbl-masuk-log').innerHTML=logs.length?logs.map(l=>`<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-g">+${l.qty} ${l.satuan}</td><td>${l.supplier||'-'}</td><td style="color:var(--text3)">${l.catatan||'-'}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Belum ada stok masuk</td></tr>';
+  $('tbl-masuk-log').innerHTML=logs.length?logs.map(l=>{
+    const[s,c]=l.exp?batchStatus(l.exp):['-','b-gray',null];
+    return `<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-g">+${l.qty} ${l.satuan}</td><td>${l.exp?`<span class="badge ${c}">${fmtD(l.exp)}</span>`:'<span style="color:var(--text3)">-</span>'}</td><td>${l.supplier||'-'}</td><td style="color:var(--text3)">${l.catatan||'-'}</td></tr>`;
+  }).join(''):'<tr><td colspan="7" class="empty">Belum ada stok masuk</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1138,9 +1362,13 @@ function openAddItem(cat){
   const stok=parseFloat(prompt('Stok awal:','0'))||0;
   const min=parseFloat(prompt('Min stok (reorder point):','0'))||0;
   const bid=SESSION.brandId;
-  
+  const it={nama,satuan,stok,min,paiManual:0,batches:[]};
+  if(stok>0){
+    const exp=prompt('Tanggal Expired stok awal (YYYY-MM-DD, kosongkan jika tidak ada):','');
+    tambahBatch(it,today(),exp||null,stok,'','Stok awal item');
+  }
   // TODO: Insert via Supabase
-  bItems(bid)[cat].push({nama,satuan,stok,min,paiManual:0});
+  bItems(bid)[cat].push(it);
   renderStokTable(bid,cat,'stbl-'+cat.replace(/ /g,'_'));
 }
 function editMin(bid,cat,i){
@@ -1178,19 +1406,21 @@ function submitKeluarBatch(){
     if(qty>0){
       if(qty>it.stok){alert(`Stok "${it.nama}" tidak cukup! Saat ini: ${it.stok} ${it.satuan}`);return;}
       it.stok=R(it.stok-qty);
+      // Ambil stok dari batch dengan sistem FIFO/FEFO (expired paling dekat duluan)
+      const dipakai=konsumsiFEFO(it,qty);
       // TODO: Supabase integration for stock update and log insert
-      DB.keluarLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama:it.nama,qty,satuan:it.satuan,alasan});
+      DB.keluarLog[bid].push({ts:new Date().toISOString(),tgl,cat,nama:it.nama,qty,satuan:it.satuan,alasan,batchDipakai:dipakai});
       if(alasan==='Rusak/Waste')DB.wasteLog[bid].push({ts:new Date().toISOString(),tgl,jenis:'Produksi Gagal',item:it.nama,qty,satuan:it.satuan,sebab:'Dari stok keluar (rusak)'});
       count++;
     }
   });
-  if(count){alert(`✓ ${count} item tersimpan`);renderKeluarLog();renderDashboard();}
+  if(count){alert(`✓ ${count} item tersimpan (FIFO/FEFO otomatis)`);renderKeluarLog();renderDashboard();}
   else alert('Tidak ada qty yang diisi (> 0)');
 }
 function renderKeluarLog(){
   const bid=SESSION.brandId;
   const logs=[...DB.keluarLog[bid]||[]].reverse().slice(0,60);
-  $('tbl-keluar-log').innerHTML=logs.length?logs.map(l=>`<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-o">${l.qty} ${l.satuan}</td><td style="color:var(--text3)">${l.alasan}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">Belum ada data</td></tr>';
+  $('tbl-keluar-log').innerHTML=logs.length?logs.map(l=>`<tr><td class="mono" style="font-size:10px">${fmtD(l.tgl)}</td><td><span class="badge b-blue">${l.cat}</span></td><td>${l.nama}</td><td class="mono tag-o">${l.qty} ${l.satuan}</td><td style="color:var(--text3)">${l.alasan}</td><td style="font-size:10px;color:var(--text3)">${fmtBatchDipakai(l.batchDipakai,l.satuan)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Belum ada data</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1286,16 +1516,19 @@ function renderOrderLog(){
   }).join(''):'<tr><td colspan="7" class="empty">Belum ada order</td></tr>';
 }
 function setOrderTiba(bid,i){
-  const o=DB.orderLog[bid][i];o.status='Tiba';
+  const o=DB.orderLog[bid][i];
   const found=allFlat(bid).find(it=>it.nama===o.item);
   if(found){
     const it=bItems(bid)[found.cat]?.find(it=>it.nama===o.item);
     if(it){
+      const exp=prompt(`Tanggal Expired untuk "${o.item}" (format YYYY-MM-DD, kosongkan jika tidak ada):`,'');
       // TODO: Supabase integration for marking order arrived and stock insertion
       it.stok=R(it.stok+o.qty);
-      DB.masukLog[bid].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:o.item,qty:o.qty,satuan:it.satuan,supplier:o.supplier||'',catatan:'Order tiba'});
+      tambahBatch(it,today(),exp||null,o.qty,o.supplier||'','Order tiba');
+      DB.masukLog[bid].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:o.item,qty:o.qty,satuan:it.satuan,exp:exp||null,supplier:o.supplier||'',catatan:'Order tiba'});
     }
   }
+  o.status='Tiba';
   renderOrderList();renderDashboard();
 }
 function submitOrderCatat(){
@@ -1438,13 +1671,17 @@ function approveTransfer(idx){
     if(it){
       if(it.stok<t.qty){alert(`Stok "${t.item}" di ${DB.brands[t.fromBrand].name} tidak cukup (${it.stok} ${it.satuan})`);return;}
       it.stok=R(it.stok-t.qty);
-      DB.keluarLog[t.fromBrand].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:it.nama,qty:t.qty,satuan:it.satuan,alasan:`Transfer ke ${DB.brands[t.toBrand].name}`});
+      // Ambil dari batch pengirim dengan FIFO/FEFO, lalu bawa tanggal expired-nya ke batch penerima
+      const dipakai=konsumsiFEFO(it,t.qty);
+      DB.keluarLog[t.fromBrand].push({ts:new Date().toISOString(),tgl:today(),cat:found.cat,nama:it.nama,qty:t.qty,satuan:it.satuan,alasan:`Transfer ke ${DB.brands[t.toBrand].name}`,batchDipakai:dipakai});
       const toFound=allFlat(t.toBrand).find(i=>i.nama.toLowerCase()===t.item.toLowerCase());
       if(toFound){
         const toIt=bItems(t.toBrand)[toFound.cat]?.find(i=>i.nama===toFound.nama);
         if(toIt){
           toIt.stok=R(toIt.stok+t.qty);
-          DB.masukLog[t.toBrand].push({ts:new Date().toISOString(),tgl:today(),cat:toFound.cat,nama:toIt.nama,qty:t.qty,satuan:toIt.satuan,supplier:`Transfer dari ${DB.brands[t.fromBrand].name}`,catatan:t.alasan});
+          // Setiap potongan batch yang dipakai dari pengirim dibawa expired-nya ke batch baru penerima
+          dipakai.forEach(d=>tambahBatch(toIt,today(),d.tglExp,d.qty,`Transfer dari ${DB.brands[t.fromBrand].name}`,t.alasan));
+          DB.masukLog[t.toBrand].push({ts:new Date().toISOString(),tgl:today(),cat:toFound.cat,nama:toIt.nama,qty:t.qty,satuan:toIt.satuan,exp:dipakai.find(d=>d.tglExp)?.tglExp||null,supplier:`Transfer dari ${DB.brands[t.fromBrand].name}`,catatan:t.alasan});
         }
       }
     }
