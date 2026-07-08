@@ -736,11 +736,14 @@ Object.keys(DB.brands).forEach(bid=>{
 //      create policy "anon write" on app_state for insert with check (true);
 //      create policy "anon update" on app_state for update using (true);
 // 3) Ambil URL & anon key di Settings > API, isi di bawah ini.
-const SUPABASE_URL = 'sb_publishable_n9BDsGV-oOu6nbtQrcbYqg_VkSOPWCE';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2emFmZHhyaHpsenZ1YmxveG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNDQ1MjQsImV4cCI6MjA5ODcyMDUyNH0.w3TFFFMF5dr9GJpGQQn9OzSAU0dPcKUKCFUffOEXjdQ';
+// PENTING: SUPABASE_URL harus format "https://xxxxxxxx.supabase.co" (Settings > Data API > Project URL).
+// Ini BUKAN key — jangan diisi dengan sb_publishable_... atau sb_secret_...
+const SUPABASE_URL = 'https://uvzafdxrhzlzvubloxml.supabase.co';
+// Publishable key (format baru Supabase, awalan sb_publishable_...) — ini sudah benar diisi di sini.
+const SUPABASE_ANON_KEY = 'sb_publishable_n9BDsGV-oOu6nbtQrcbYqg_VkSOPWCE';
 const STATE_ROW_ID = 'main';
 
-const sbConfigured = !SUPABASE_URL.includes('YOUR_SUPABASE_URL') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
+const sbConfigured = /^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) && !!SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
 
 // Fetch kustom untuk Supabase client.
 // Beberapa environment preview/sandbox (mis. iframe about:srcdoc) menimpa window.fetch
@@ -786,6 +789,18 @@ function describeSbError(err){
   try{ return JSON.stringify(err); }catch(e){ return String(err); }
 }
 
+// Deteksi kegagalan di level jaringan ("Failed to fetch" / "NetworkError") dan beri
+// petunjuk penyebab yang paling umum, supaya tidak membingungkan seperti pesan mentah browser.
+function sbErrorHint(err){
+  const msg = describeSbError(err);
+  if(err && err.code==='42P01') return ' → Tabel "app_state" belum ada. Jalankan SQL setup di Supabase SQL Editor.';
+  if(err && (err.code==='42501' || /permission|policy/i.test(err.message||''))) return ' → Izin akses (RLS policy) untuk role anon belum diatur. Jalankan SQL setup.';
+  if(/failed to fetch|networkerror|load failed/i.test(msg)){
+    return ' → Request tidak sampai ke server Supabase. Kemungkinan: (1) preview/sandbox ini memblokir akses jaringan keluar — coba buka file .html langsung di tab browser biasa, (2) project Supabase sedang "paused" (project gratis auto-pause jika tidak dipakai, buka dashboard Supabase untuk resume), atau (3) SUPABASE_URL salah/typo.';
+  }
+  return '';
+}
+
 let syncReady = false;
 let saveTimer = null;
 
@@ -811,10 +826,16 @@ async function saveStateToSupabase(){
     const payload = JSON.parse(JSON.stringify(rawDB));
     const { error } = await sb.from('app_state').upsert({ id: STATE_ROW_ID, data: payload, updated_at: new Date().toISOString() });
     setSyncStatus(error ? 'error' : 'saved');
-    if(error) console.error('Supabase save error:', describeSbError(error), error);
+    if(error){
+      console.error('Supabase save error:', describeSbError(error), error);
+      const el = document.getElementById('sync-status');
+      if(el) el.title = describeSbError(error)+sbErrorHint(error);
+    }
   }catch(e){
     console.error('Supabase save exception:', e);
     setSyncStatus('error');
+    const el = document.getElementById('sync-status');
+    if(el) el.title = describeSbError(e)+sbErrorHint(e);
   }
 }
 
@@ -864,10 +885,7 @@ async function initSupabaseSync(){
 
     if(error){
       console.error('Supabase select error:', describeSbError(error), error);
-      let hint = '';
-      if(error.code==='42P01') hint = ' → Tabel "app_state" belum ada. Jalankan SQL setup di Supabase SQL Editor.';
-      else if(error.code==='42501' || /permission|policy/i.test(error.message||'')) hint = ' → Izin akses (RLS policy) untuk role anon belum diatur. Jalankan SQL setup.';
-      if(msgEl){ msgEl.textContent='Gagal load: '+describeSbError(error)+hint; msgEl.style.color='var(--red)'; }
+      if(msgEl){ msgEl.textContent='Gagal load: '+describeSbError(error)+sbErrorHint(error); msgEl.style.color='var(--red)'; }
     }else if(data && data.data){
       Object.keys(rawDB).forEach(k=>delete rawDB[k]);
       Object.assign(rawDB, data.data);
@@ -876,14 +894,14 @@ async function initSupabaseSync(){
       const { error: insErr } = await sb.from('app_state').insert({ id: STATE_ROW_ID, data: JSON.parse(JSON.stringify(rawDB)), updated_at: new Date().toISOString() });
       if(insErr){
         console.error('Supabase insert error:', describeSbError(insErr), insErr);
-        if(msgEl){ msgEl.textContent='Gagal buat data awal: '+describeSbError(insErr); msgEl.style.color='var(--red)'; }
+        if(msgEl){ msgEl.textContent='Gagal buat data awal: '+describeSbError(insErr)+sbErrorHint(insErr); msgEl.style.color='var(--red)'; }
       }else{
         if(msgEl){ msgEl.textContent='Database awal berhasil dibuat di Supabase.'; msgEl.style.color='var(--green)'; }
       }
     }
   }catch(e){
     console.error('Supabase load exception:', e);
-    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase: '+(e&&e.message?e.message:describeSbError(e)); msgEl.style.color='var(--red)'; }
+    if(msgEl){ msgEl.textContent='Gagal terhubung ke Supabase: '+describeSbError(e)+sbErrorHint(e); msgEl.style.color='var(--red)'; }
   }
 
   userInput.disabled = false; passInput.disabled = false;
